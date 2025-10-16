@@ -1,0 +1,37 @@
+# 依存関係
+/node_modules
+
+# 環境変数ファイル
+.env
+.env.local
+.env.development
+.env.production
+
+# ビルド成果物や一時ファイルなど（必要に応じて追加）
+/dist
+/build
+*.log
+
+# IDEの設定ファイルなど（例: VS Codeの設定ファイル）
+.vscode/
+
+# 機密情報を含む可能性のあるファイル（名前が完全な一例）
+# データベース接続情報などを含む可能性があるため
+*.sql
+*.md
+*.txt
+
+# ユーザーが指定したファイル（画像に表示されているもの）
+# 具体的にプッシュしたくないファイル名があれば追加
+database_billing.sql
+database_cleanup.sql
+database_design.md
+database_estimates.sql
+database_households.sql
+database_phase2.sql
+database_phase3.sql
+database_phase4.sql
+database.sql
+PROJECT_STATUS.md
+temple1111.txt
+見つもり画面.png
