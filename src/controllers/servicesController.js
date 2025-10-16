@@ -1,30 +1,15 @@
-const { Client } = require('pg');
-
-const dbConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-};
+const db = require('../config/db');
 
 // @desc    Get all services
 // @route   GET /api/services
 // @access  Public
 const getServices = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query('SELECT * FROM services ORDER BY name');
+    const { rows } = await db.query('SELECT * FROM services ORDER BY name');
     res.json(rows);
   } catch (err) {
     console.error('getServices Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -32,11 +17,9 @@ const getServices = async (req, res) => {
 // @route   POST /api/services
 // @access  Public
 const createService = async (req, res) => {
-  const client = new Client(dbConfig);
   const { service_code, name, description, default_total_cost } = req.body;
   try {
-    await client.connect();
-    const { rows } = await client.query(
+    const { rows } = await db.query(
       'INSERT INTO services (service_code, name, description, default_total_cost) VALUES ($1, $2, $3, $4) RETURNING *',
       [service_code, name, description, default_total_cost]
     );
@@ -44,8 +27,6 @@ const createService = async (req, res) => {
   } catch (err) {
     console.error('createService Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -53,11 +34,9 @@ const createService = async (req, res) => {
 // @route   PUT /api/services/:id
 // @access  Public
 const updateService = async (req, res) => {
-  const client = new Client(dbConfig);
   const { service_code, name, description, default_total_cost } = req.body;
   try {
-    await client.connect();
-    const { rows } = await client.query(
+    const { rows } = await db.query(
       'UPDATE services SET service_code = $1, name = $2, description = $3, default_total_cost = $4 WHERE id = $5 RETURNING *',
       [service_code, name, description, default_total_cost, req.params.id]
     );
@@ -68,8 +47,6 @@ const updateService = async (req, res) => {
   } catch (err) {
     console.error('updateService Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -77,10 +54,8 @@ const updateService = async (req, res) => {
 // @route   DELETE /api/services/:id
 // @access  Public
 const deleteService = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query('DELETE FROM services WHERE id = $1 RETURNING *', [req.params.id]);
+    const { rows } = await db.query('DELETE FROM services WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Service not found' });
     }
@@ -88,8 +63,6 @@ const deleteService = async (req, res) => {
   } catch (err) {
     console.error('deleteService Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 

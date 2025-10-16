@@ -1,30 +1,15 @@
-const { Client } = require('pg');
-
-const dbConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-};
+const db = require('../config/db');
 
 // @desc    Get all households
 // @route   GET /api/households
 // @access  Public
 const getHouseholds = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query('SELECT * FROM households ORDER BY household_name');
+    const { rows } = await db.query('SELECT * FROM households ORDER BY household_name');
     res.json(rows);
   } catch (err) {
     console.error('getHouseholds Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -32,11 +17,9 @@ const getHouseholds = async (req, res) => {
 // @route   POST /api/households
 // @access  Public
 const createHousehold = async (req, res) => {
-  const client = new Client(dbConfig);
   const { household_name } = req.body;
   try {
-    await client.connect();
-    const { rows } = await client.query(
+    const { rows } = await db.query(
       'INSERT INTO households (household_name) VALUES ($1) RETURNING *',
       [household_name]
     );
@@ -44,8 +27,6 @@ const createHousehold = async (req, res) => {
   } catch (err) {
     console.error('createHousehold Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -53,11 +34,9 @@ const createHousehold = async (req, res) => {
 // @route   PUT /api/households/:id
 // @access  Public
 const updateHousehold = async (req, res) => {
-  const client = new Client(dbConfig);
   const { household_name } = req.body;
   try {
-    await client.connect();
-    const { rows } = await client.query(
+    const { rows } = await db.query(
       'UPDATE households SET household_name = $1 WHERE id = $2 RETURNING *',
       [household_name, req.params.id]
     );
@@ -68,8 +47,6 @@ const updateHousehold = async (req, res) => {
   } catch (err) {
     console.error('updateHousehold Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -77,10 +54,8 @@ const updateHousehold = async (req, res) => {
 // @route   DELETE /api/households/:id
 // @access  Public
 const deleteHousehold = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query('DELETE FROM households WHERE id = $1 RETURNING *', [req.params.id]);
+    const { rows } = await db.query('DELETE FROM households WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Household not found' });
     }
@@ -88,8 +63,6 @@ const deleteHousehold = async (req, res) => {
   } catch (err) {
     console.error('deleteHousehold Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 

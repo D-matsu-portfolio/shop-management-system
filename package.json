@@ -2,9 +2,11 @@
   "name": "shop-management-system",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "nodemon --exec \"node --max-http-header-size=16384 src/index.js\"",
+    "start": "node src/index.js",
+    "build": "npm run build --prefix frontend",
+    "dev": "nodemon --exec \"node --max-http-header-size=16384 src/index.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,9 +15,13 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }

@@ -1,24 +1,11 @@
-const { Client } = require('pg');
-
-const dbConfig = {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-};
+const db = require('../config/db');
 
 // @desc    Get all estimates
 // @route   GET /api/estimates
 // @access  Public
 const getEstimates = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query(`
+    const { rows } = await db.query(`
       SELECT 
         e.id, e.estimate_date, e.status, e.grand_total, 
         c.name as customer_name, 
@@ -32,8 +19,6 @@ const getEstimates = async (req, res) => {
   } catch (err) {
     console.error('getEstimates Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -41,15 +26,12 @@ const getEstimates = async (req, res) => {
 // @route   POST /api/estimates
 // @access  Public
 const createEstimate = async (req, res) => {
-  const client = new Client(dbConfig);
-  // Note: `notes` field is added to the request body
   const { customer_id, vehicle_id, estimate_date, status, notes, line_items } = req.body;
+  const client = await db.pool.connect(); // Get a client from the pool
 
   try {
-    await client.connect();
     await client.query('BEGIN'); // Start transaction
 
-    // Insert the main estimate record first, with temporary totals
     const estimateQuery = `
       INSERT INTO estimates (customer_id, vehicle_id, estimate_date, status, notes)
       VALUES ($1, $2, $3, $4, $5) RETURNING id;
@@ -58,7 +40,6 @@ const createEstimate = async (req, res) => {
     const estimateId = estimateResult.rows[0].id;
 
     let sub_total = 0;
-    // Insert each line item and calculate sub_total
     for (const item of line_items) {
       const itemTotalPrice = Number(item.quantity) * Number(item.unit_price);
       sub_total += itemTotalPrice;
@@ -78,11 +59,9 @@ const createEstimate = async (req, res) => {
       ]);
     }
 
-    // Calculate final totals (e.g., 10% tax)
     const tax = sub_total * 0.10;
     const grand_total = sub_total + tax;
 
-    // Now, update the estimate with the correct totals
     const updateQuery = `UPDATE estimates SET sub_total = $1, tax = $2, grand_total = $3 WHERE id = $4`;
     await client.query(updateQuery, [sub_total, tax, grand_total, estimateId]);
 
@@ -95,7 +74,7 @@ const createEstimate = async (req, res) => {
     console.error('createEstimate Error:', err);
     res.status(500).send('Server Error');
   } finally {
-    await client.end();
+    client.release(); // Release the client back to the pool
   }
 };
 
@@ -103,7 +82,6 @@ const createEstimate = async (req, res) => {
 // @route   GET /api/shaken-fees?vehicleWeight=1200
 // @access  Public
 const getShakenFees = async (req, res) => {
-  const client = new Client(dbConfig);
   const { vehicleWeight } = req.query;
   const weight = parseInt(vehicleWeight, 10);
 
@@ -112,10 +90,7 @@ const getShakenFees = async (req, res) => {
   }
 
   try {
-    await client.connect();
-    // Find fees where the vehicle weight falls within the bracket
-    // Also include fees that are not weight-dependent (e.g., where min/max is a wide range or a specific code)
-    const { rows } = await client.query(
+    const { rows } = await db.query(
       'SELECT * FROM statutory_costs WHERE (weight_min <= $1 AND weight_max > $1) OR (item_name LIKE \'%自賠責%\' AND weight_max > $1) OR (item_name LIKE \'%印紙代%\')',
       [weight]
     );
@@ -123,8 +98,6 @@ const getShakenFees = async (req, res) => {
   } catch (err) {
     console.error('getShakenFees Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -132,10 +105,8 @@ const getShakenFees = async (req, res) => {
 // @route   GET /api/estimates/by-customer/:customerId
 // @access  Public
 const getEstimatesByCustomerId = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query(`
+    const { rows } = await db.query(`
       SELECT 
         e.id, e.estimate_date, e.status, e.grand_total,
         v.make, v.model, v.license_plate
@@ -148,8 +119,6 @@ const getEstimatesByCustomerId = async (req, res) => {
   } catch (err) {
     console.error('getEstimatesByCustomerId Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -157,16 +126,12 @@ const getEstimatesByCustomerId = async (req, res) => {
 // @route   GET /api/estimates/by-vehicle/:vehicleId
 // @access  Public
 const getEstimatesByVehicleId = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    const { rows } = await client.query('SELECT * FROM estimates WHERE vehicle_id = $1 ORDER BY estimate_date DESC', [req.params.vehicleId]);
+    const { rows } = await db.query('SELECT * FROM estimates WHERE vehicle_id = $1 ORDER BY estimate_date DESC', [req.params.vehicleId]);
     res.json(rows);
   } catch (err) {
     console.error('getEstimatesByVehicleId Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -174,10 +139,7 @@ const getEstimatesByVehicleId = async (req, res) => {
 // @route   GET /api/estimates/:id
 // @access  Public
 const getEstimateById = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
-    // Query 1: Get the main estimate data and join with customer/vehicle
     const estimateQuery = `
       SELECT e.*, c.name as customer_name, c.address as customer_address, c.phone_number as customer_phone,
              v.make, v.model, v.license_plate, v.vin, v.weight
@@ -186,7 +148,7 @@ const getEstimateById = async (req, res) => {
       LEFT JOIN vehicles v ON e.vehicle_id = v.id
       WHERE e.id = $1
     `;
-    const estimateResult = await client.query(estimateQuery, [req.params.id]);
+    const estimateResult = await db.query(estimateQuery, [req.params.id]);
 
     if (estimateResult.rows.length === 0) {
       return res.status(404).json({ msg: 'Estimate not found' });
@@ -194,9 +156,8 @@ const getEstimateById = async (req, res) => {
 
     const estimate = estimateResult.rows[0];
 
-    // Query 2: Get the line items for this estimate
     const lineItemsQuery = `SELECT * FROM estimate_line_items WHERE estimate_id = $1 ORDER BY id`;
-    const lineItemsResult = await client.query(lineItemsQuery, [req.params.id]);
+    const lineItemsResult = await db.query(lineItemsQuery, [req.params.id]);
 
     estimate.line_items = lineItemsResult.rows;
 
@@ -205,8 +166,6 @@ const getEstimateById = async (req, res) => {
   } catch (err) {
     console.error('getEstimateById Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
@@ -214,11 +173,9 @@ const getEstimateById = async (req, res) => {
 // @route   DELETE /api/estimates/:id
 // @access  Public
 const deleteEstimate = async (req, res) => {
-  const client = new Client(dbConfig);
   try {
-    await client.connect();
     // Deleting an estimate will also delete its line items due to ON DELETE CASCADE
-    const { rows } = await client.query('DELETE FROM estimates WHERE id = $1 RETURNING *', [req.params.id]);
+    const { rows } = await db.query('DELETE FROM estimates WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Estimate not found' });
     }
@@ -226,8 +183,6 @@ const deleteEstimate = async (req, res) => {
   } catch (err) {
     console.error('deleteEstimate Error:', err);
     res.status(500).send('Server Error');
-  } finally {
-    await client.end();
   }
 };
 
