@@ -199,29 +199,24 @@ const deleteEstimate = async (req, res) => {
 // @route   POST /api/statutory-costs/import
 // @access  Private
 const importStatutoryCosts = async (req, res) => {
-  // Use upload.single('file') as a middleware here
   upload.single('file')(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ msg: `Multer error: ${err.message}` });
-    } else if (err) {
-      return res.status(500).json({ msg: `Unknown error: ${err.message}` });
+    if (err) {
+      return res.status(400).json({ msg: `File upload error: ${err.message}` });
     }
-
     if (!req.file) {
       return res.status(400).json({ msg: 'No file uploaded' });
     }
 
     const costsToImport = [];
-    const readableStream = Readable.from(req.file.buffer.toString('utf-8')); // Convert buffer to readable stream
+    const readableStream = Readable.from(req.file.buffer.toString('utf-8'));
 
     readableStream
       .pipe(csv())
       .on('data', (data) => {
-        // Basic validation and type conversion
         costsToImport.push({
           item_name: data.item_name,
-          weight_min: parseInt(data.weight_min) || 0,
-          weight_max: parseInt(data.weight_max) || 99999, // Default to a large number if not provided
+          weight_min: parseInt(data.weight_min, 10) || 0,
+          weight_max: parseInt(data.weight_max, 10) || 99999,
           cost: parseFloat(data.cost) || 0,
         });
       })
@@ -234,28 +229,36 @@ const importStatutoryCosts = async (req, res) => {
         try {
           await client.query('BEGIN');
           let importedCount = 0;
+          let updatedCount = 0;
 
           for (const cost of costsToImport) {
-            // UPSERT operation: INSERT if item_name, weight_min, weight_max combination does not exist, UPDATE if it does
-            // Assuming item_name, weight_min, weight_max form a unique key for upsert
-            const upsertQuery = `
-              INSERT INTO statutory_costs (item_name, weight_min, weight_max, cost)
-              VALUES (, $2, $3, $4)
-              ON CONFLICT (item_name, weight_min, weight_max) DO UPDATE
-              SET cost = EXCLUDED.cost
-              RETURNING id;
+            const selectQuery = `
+              SELECT id FROM statutory_costs 
+              WHERE item_name = $1 AND weight_min = $2 AND weight_max = $3;
             `;
-            await client.query(upsertQuery, [
-              cost.item_name,
-              cost.weight_min,
-              cost.weight_max,
-              cost.cost,
-            ]);
-            importedCount++;
+            const existing = await client.query(selectQuery, [cost.item_name, cost.weight_min, cost.weight_max]);
+
+            if (existing.rows.length > 0) {
+              // Record exists, so UPDATE
+              const updateQuery = `
+                UPDATE statutory_costs SET cost = $1 
+                WHERE id = $2;
+              `;
+              await client.query(updateQuery, [cost.cost, existing.rows[0].id]);
+              updatedCount++;
+            } else {
+              // Record does not exist, so INSERT
+              const insertQuery = `
+                INSERT INTO statutory_costs (item_name, weight_min, weight_max, cost)
+                VALUES ($1, $2, $3, $4);
+              `;
+              await client.query(insertQuery, [cost.item_name, cost.weight_min, cost.weight_max, cost.cost]);
+              importedCount++;
+            }
           }
 
           await client.query('COMMIT');
-          res.status(200).json({ msg: `${importedCount} statutory costs imported successfully` });
+          res.status(200).json({ msg: `Import successful: ${importedCount} new costs added, ${updatedCount} costs updated.` });
         } catch (dbErr) {
           await client.query('ROLLBACK');
           console.error('importStatutoryCosts DB Error:', dbErr);
