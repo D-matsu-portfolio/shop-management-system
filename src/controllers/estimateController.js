@@ -43,7 +43,7 @@ const createEstimate = async (req, res) => {
 
     const estimateQuery = `
       INSERT INTO estimates (customer_id, vehicle_id, estimate_date, status, notes)
-      VALUES (, $2, $3, $4, $5) RETURNING id;
+      VALUES ($1, $2, $3, $4, $5) RETURNING id;
     `;
     const estimateResult = await client.query(estimateQuery, [customer_id, vehicle_id, estimate_date, status, notes]);
     const estimateId = estimateResult.rows[0].id;
@@ -54,7 +54,7 @@ const createEstimate = async (req, res) => {
       sub_total += itemTotalPrice;
       const lineItemQuery = `
         INSERT INTO estimate_line_items (estimate_id, item_type, part_id, service_id, description, quantity, unit_price, total_price)
-        VALUES (, $2, $3, $4, $5, $6, $7, $8);
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
       `;
       await client.query(lineItemQuery, [
         estimateId, 
@@ -71,7 +71,7 @@ const createEstimate = async (req, res) => {
     const tax = sub_total * 0.10;
     const grand_total = sub_total + tax;
 
-    const updateQuery = `UPDATE estimates SET sub_total = , tax = $2, grand_total = $3 WHERE id = $4`;
+    const updateQuery = `UPDATE estimates SET sub_total = $1, tax = $2, grand_total = $3 WHERE id = $4`;
     await client.query(updateQuery, [sub_total, tax, grand_total, estimateId]);
 
     await client.query('COMMIT'); // Commit transaction
@@ -100,7 +100,7 @@ const getShakenFees = async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      'SELECT * FROM statutory_costs WHERE (weight_min <=  AND weight_max > ) OR (item_name LIKE \'%自賠責%\' AND weight_max > ) OR (item_name LIKE \'%印紙代%\')',
+      'SELECT * FROM statutory_costs WHERE (weight_min <= $1 AND weight_max > $1) OR item_name LIKE \'%自賠責%\' OR item_name LIKE \'%印紙代%\'',
       [weight]
     );
     res.json(rows);
