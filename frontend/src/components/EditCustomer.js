@@ -3,6 +3,7 @@ import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress
 } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function EditCustomer({ customer, onCustomerUpdated, open, onClose }) {
   const [households, setHouseholds] = useState([]);
@@ -16,17 +17,18 @@ function EditCustomer({ customer, onCustomerUpdated, open, onClose }) {
   // Fetch all households when the dialog opens
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    fetch('/api/households')
-      .then(res => res.json())
-      .then(data => {
+    const fetchHouseholds = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch('/api/households');
         setHouseholds(data);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Failed to fetch households", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchHouseholds();
   }, [open]);
 
   const handleChange = (e) => {
@@ -37,25 +39,25 @@ function EditCustomer({ customer, onCustomerUpdated, open, onClose }) {
     setFormData({ ...formData, household_id: newValue ? newValue.id : null });
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch(`/api/customers/${customer.id}`,
-     {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Customer updated:', data);
-          onClose();
-          onCustomerUpdated();
-        } else {
-          throw new Error(data.message || 'Error updating customer');
-        }
-      })
-      .catch(error => console.error('Error updating customer:', error));
+    try {
+      const data = await apiFetch(`/api/customers/${customer.id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Customer updated:', data);
+        onClose();
+        onCustomerUpdated();
+      } else {
+        throw new Error(data.message || 'Error updating customer');
+      }
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      alert('顧客情報の更新に失敗しました。');
+    }
   };
 
   // Find the full household object for the Autocomplete value

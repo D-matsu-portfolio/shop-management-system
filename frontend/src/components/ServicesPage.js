@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddService from './AddService';
 import EditService from './EditService';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -33,17 +34,15 @@ function ServicesPage() {
     setEditService(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この作業を本当に削除しますか？')) {
-      fetch(`/api/services/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete service');
-          }
-        })
-        .catch(error => console.error('Error deleting service:', error));
+      try {
+        await apiFetch(`/api/services/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting service:', error);
+        alert('作業の削除に失敗しました。');
+      }
     }
   };
 
@@ -84,13 +83,16 @@ function ServicesPage() {
   ];
 
   useEffect(() => {
-    fetch('/api/services')
-      .then(response => response.json())
-      .then(data => {
+    const fetchServices = async () => {
+      try {
+        const data = await apiFetch('/api/services');
         setServices(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching services:', error));
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      }
+    };
+    fetchServices();
   }, [refetch]);
 
   return (

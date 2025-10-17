@@ -3,6 +3,7 @@ import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress
 } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 // The button to open the dialog can be customized by passing a render prop
 function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
@@ -30,17 +31,18 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
   // Fetch customers if no initial customer is provided
   useEffect(() => {
     if (!open || initialCustomer) return;
-    setLoading(true);
-    fetch('/api/customers')
-      .then(res => res.json())
-      .then(data => {
+    const fetchCustomers = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch('/api/customers');
         setCustomers(data);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Failed to fetch customers", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchCustomers();
   }, [open, initialCustomer]);
 
   const resetForm = () => {
@@ -59,24 +61,24 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
     setFormData({ ...formData, customer_id: newValue ? newValue.id : null });
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/vehicles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Vehicle created:', data);
-          handleClose();
-          onVehicleAdded();
-        } else {
-          throw new Error(data.message || 'Error creating vehicle');
-        }
-      })
-      .catch(error => console.error('Error creating vehicle:', error));
+    try {
+      const data = await apiFetch('/api/vehicles', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Vehicle created:', data);
+        handleClose();
+        onVehicleAdded();
+      } else {
+        throw new Error(data.message || 'Error creating vehicle');
+      }
+    } catch (error) {
+      console.error('Error creating vehicle:', error);
+      alert('車両の作成に失敗しました。');
+    }
   };
 
   return (

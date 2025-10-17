@@ -6,6 +6,7 @@ import {
   DialogTitle, TextField 
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { apiFetch } from '../utils/api';
 
 // Helper function for formatting currency
 const formatCurrency = (value) => {
@@ -32,34 +33,35 @@ function EstimateDetailPage() {
   const componentRef = useRef(null);
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`/api/estimates/${id}`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchEstimate = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch(`/api/estimates/${id}`);
         setEstimate(data);
-        setLoading(false);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching estimate details:', error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchEstimate();
   }, [id]);
 
-  const handleGenerateInvoice = () => {
-    fetch(`/api/invoices/from-estimate/${id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(invoiceData),
-    })
-    .then(res => res.json())
-    .then(data => {
+  const handleGenerateInvoice = async () => {
+    try {
+      const data = await apiFetch(`/api/invoices/from-estimate/${id}`, {
+        method: 'POST',
+        body: JSON.stringify(invoiceData),
+      });
       if (data.id) {
         navigate(`/invoices/${data.id}`);
       } else {
         throw new Error(data.message || 'Error creating invoice');
       }
-    })
-    .catch(err => console.error('Error creating invoice:', err));
+    } catch (err) {
+      console.error('Error creating invoice:', err);
+      alert('請求書の作成に失敗しました。');
+    }
   };
 
   if (loading) {

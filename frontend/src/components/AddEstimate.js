@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { apiFetch } from '../utils/api';
 
 const estimateTypes = ['一般整備', '車検'];
 
@@ -37,50 +38,56 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
   // Fetch master data when dialog opens
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    Promise.all([
-      // Only fetch customers/vehicles if not provided
-      !initialCustomer ? fetch('/api/customers').then(res => res.json()) : Promise.resolve([initialCustomer]),
-      !initialVehicle ? fetch('/api/vehicles').then(res => res.json()) : Promise.resolve([initialVehicle]),
-      fetch('/api/parts').then(res => res.json()),
-      fetch('/api/services').then(res => res.json()),
-    ]).then(([customerData, vehicleData, partsData, servicesData]) => {
-      setCustomers(customerData);
-      setVehicles(vehicleData);
-      setParts(partsData);
-      setServices(servicesData);
-      setLoading(false);
-    }).catch(err => {
-      console.error("Failed to fetch data for estimate form", err);
-      setLoading(false);
-    });
+    const fetchMasterData = async () => {
+      setLoading(true);
+      try {
+        const [customerData, vehicleData, partsData, servicesData] = await Promise.all([
+          !initialCustomer ? apiFetch('/api/customers') : Promise.resolve([initialCustomer]),
+          !initialVehicle ? apiFetch('/api/vehicles') : Promise.resolve([initialVehicle]),
+          apiFetch('/api/parts'),
+          apiFetch('/api/services'),
+        ]);
+        setCustomers(customerData);
+        setVehicles(vehicleData);
+        setParts(partsData);
+        setServices(servicesData);
+      } catch (err) {
+        console.error("Failed to fetch data for estimate form", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMasterData();
   }, [open, initialCustomer, initialVehicle]);
 
   // Auto-populate fees when estimate type is "Shaken" and a vehicle is selected
   useEffect(() => {
-    if (estimateType === '車検' && selectedVehicle && selectedVehicle.weight) {
-      const shakenBaseService = services.find(s => s.service_code === 'SHAKEN-BASE');
-      const baseItems = shakenBaseService ? [{
-        item_type: 'service',
-        service_id: shakenBaseService.id,
-        description: shakenBaseService.name,
-        quantity: 1,
-        unit_price: shakenBaseService.default_total_cost,
-        is_fixed: true,
-      }] : [];
+    const fetchShakenFees = async () => {
+      if (estimateType === '車検' && selectedVehicle && selectedVehicle.weight) {
+        const shakenBaseService = services.find(s => s.service_code === 'SHAKEN-BASE');
+        const baseItems = shakenBaseService ? [{
+          item_type: 'service',
+          service_id: shakenBaseService.id,
+          description: shakenBaseService.name,
+          quantity: 1,
+          unit_price: shakenBaseService.default_total_cost,
+          is_fixed: true,
+        }] : [];
 
-      fetch(`/api/shaken-fees?vehicleWeight=${selectedVehicle.weight}`)
-        .then(res => res.json())
-        .then(fees => {
+        try {
+          const fees = await apiFetch(`/api/shaken-fees?vehicleWeight=${selectedVehicle.weight}`);
           const feeItems = fees.map(fee => ({ item_type: 'fee', description: fee.item_name, quantity: 1, unit_price: fee.cost, is_fixed: true }));
           const otherItems = lineItems.filter(item => !item.is_fixed);
           setLineItems([...baseItems, ...feeItems, ...otherItems]);
-        })
-        .catch(err => console.error("Failed to fetch shaken fees", err));
-    } else {
-      const otherItems = lineItems.filter(item => !item.is_fixed);
-      setLineItems(otherItems);
-    }
+        } catch (err) {
+          console.error("Failed to fetch shaken fees", err);
+        }
+      } else {
+        const otherItems = lineItems.filter(item => !item.is_fixed);
+        setLineItems(otherItems);
+      }
+    };
+    fetchShakenFees();
   }, [estimateType, selectedVehicle, services]);
 
   const resetForm = () => {
@@ -103,13 +110,21 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
   const handleLineItemChange = (index, event) => { const values = [...lineItems]; values[index][event.target.name] = event.target.value; setLineItems(values); };
   const handleRemoveLineItem = (index) => { const values = [...lineItems]; values.splice(index, 1); setLineItems(values); };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = { customer_id: selectedCustomer.id, vehicle_id: selectedVehicle.id, estimate_date: estimateDate, status: 'draft', notes: notes, line_items: lineItems.map(item => ({ ...item, unit_price: Number(item.unit_price), quantity: Number(item.quantity) })) };
-    fetch('/api/estimates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      .then(res => res.json())
-      .then(data => { if(data.id) { handleClose(); onEstimateAdded(); } else { throw new Error(data.message || 'Error creating estimate'); } })
-      .catch(error => console.error('Error creating estimate:', error));
+    try {
+      const data = await apiFetch('/api/estimates', { method: 'POST', body: JSON.stringify(payload) });
+      if(data.id) { 
+        handleClose(); 
+        onEstimateAdded(); 
+      } else { 
+        throw new Error(data.message || 'Error creating estimate'); 
+      }
+    } catch (error) {
+      console.error('Error creating estimate:', error);
+      alert('見積もりの作成に失敗しました。');
+    }
   };
 
   const subTotal = lineItems.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.unit_price)), 0);

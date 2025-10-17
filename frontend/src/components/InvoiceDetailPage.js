@@ -5,6 +5,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell 
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { apiFetch } from '../utils/api';
 
 // Helper function for formatting currency
 const formatCurrency = (value) => {
@@ -25,17 +26,18 @@ function InvoiceDetailPage() {
   const componentRef = useRef(null);
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`/api/invoices/${id}`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchInvoice = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch(`/api/invoices/${id}`);
         setInvoice(data);
-        setLoading(false);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching invoice details:', error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchInvoice();
   }, [id]);
 
   if (loading) {

@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddEstimate from './AddEstimate';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -22,17 +22,15 @@ function EstimatePage() {
     setRefetch(prev => !prev);
   }, []);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この見積もりを本当に削除しますか？')) {
-      fetch(`/api/estimates/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete estimate');
-          }
-        })
-        .catch(error => console.error('Error deleting estimate:', error));
+      try {
+        await apiFetch(`/api/estimates/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting estimate:', error);
+        alert(`見積もりの削除に失敗しました: ${error.message}`);
+      }
     }
   };
 
@@ -74,13 +72,16 @@ function EstimatePage() {
   ];
 
   useEffect(() => {
-    fetch('/api/estimates')
-      .then(response => response.json())
-      .then(data => {
+    const fetchEstimates = async () => {
+      try {
+        const data = await apiFetch('/api/estimates');
         setEstimates(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching estimates:', error));
+      } catch (error) {
+        console.error('Error fetching estimates:', error);
+      }
+    };
+    fetchEstimates();
   }, [refetch]);
 
   const handleRowClick = (params, event) => {

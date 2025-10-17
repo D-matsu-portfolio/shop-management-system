@@ -3,6 +3,7 @@ import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress, Alert
 } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function AddCustomer({ onCustomerAdded }) {
   const [open, setOpen] = useState(false);
@@ -21,17 +22,18 @@ function AddCustomer({ onCustomerAdded }) {
   // Fetch all households when the dialog opens
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    fetch('/api/households')
-      .then(res => res.json())
-      .then(data => {
+    const fetchHouseholds = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch('/api/households');
         setHouseholds(data);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Failed to fetch households", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchHouseholds();
   }, [open]);
 
   const resetForm = () => {
@@ -51,38 +53,37 @@ function AddCustomer({ onCustomerAdded }) {
   }
 
   // This is the new function to check for existing households at the same address
-  const handleAddressBlur = () => {
+  const handleAddressBlur = async () => {
     if (!formData.address) return;
-
-    fetch(`/api/customers?address=${encodeURIComponent(formData.address)}`)
-      .then(res => res.json())
-      .then(existingCustomers => {
-        const foundHousehold = existingCustomers.find(c => c.household_id && c.household_name);
-        if (foundHousehold) {
-          setSuggestedHousehold({ id: foundHousehold.household_id, name: foundHousehold.household_name });
-        }
-      })
-      .catch(err => console.error('Error checking address:', err));
+    try {
+      const existingCustomers = await apiFetch(`/api/customers?address=${encodeURIComponent(formData.address)}`);
+      const foundHousehold = existingCustomers.find(c => c.household_id && c.household_name);
+      if (foundHousehold) {
+        setSuggestedHousehold({ id: foundHousehold.household_id, name: foundHousehold.household_name });
+      }
+    } catch (err) {
+      console.error('Error checking address:', err);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Customer created:', data);
-          handleClose();
-          onCustomerAdded();
-        } else {
-          throw new Error(data.message || 'Error creating customer');
-        }
-      })
-      .catch(error => console.error('Error creating customer:', error));
+    try {
+      const data = await apiFetch('/api/customers', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Customer created:', data);
+        handleClose();
+        onCustomerAdded();
+      } else {
+        throw new Error(data.message || 'Error creating customer');
+      }
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      alert('顧客の作成に失敗しました。');
+    }
   };
 
   return (

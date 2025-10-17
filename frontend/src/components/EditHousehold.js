@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function EditHousehold({ household, onHouseholdUpdated, open, onClose }) {
   const [formData, setFormData] = useState(household);
@@ -12,24 +13,24 @@ function EditHousehold({ household, onHouseholdUpdated, open, onClose }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch(`/api/households/${household.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Household updated:', data);
-          onClose();
-          onHouseholdUpdated();
-        } else {
-          throw new Error(data.message || 'Error updating household');
-        }
-      })
-      .catch(error => console.error('Error updating household:', error));
+    try {
+      const data = await apiFetch(`/api/households/${household.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Household updated:', data);
+        onClose();
+        onHouseholdUpdated();
+      } else {
+        throw new Error(data.message || 'Error updating household');
+      }
+    } catch (error) {
+      console.error('Error updating household:', error);
+      alert('世帯の更新に失敗しました。');
+    }
   };
 
   return (
