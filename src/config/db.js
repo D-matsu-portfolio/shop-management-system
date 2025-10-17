@@ -23,6 +23,18 @@ const connectionConfig = isProduction
 
 const pool = new Pool(connectionConfig);
 
+// データベース接続をテストし、エラーを詳細にログ出力する
+(async () => {
+  try {
+    const client = await pool.connect();
+    console.log('Database connected successfully!');
+    client.release();
+  } catch (err) {
+    console.error('!!! DATABASE CONNECTION FAILED !!!');
+    console.error(err);
+  }
+})();
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool, // Export the pool object for transactions
