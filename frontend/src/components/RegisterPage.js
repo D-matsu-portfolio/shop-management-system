@@ -1,32 +1,31 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button, TextField, Container, Typography, Box } from '@mui/material';
 import { apiFetch } from '../utils/api';
 
-const LoginPage = () => {
+const RegisterPage = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    try {
-      const { token } = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      });
+    if (!username || !email || !password) {
+      setError('全ての項目を入力してください。');
+      return;
+    }
 
-      if (token) {
-        login(token);
-        navigate('/'); // Redirect to home page after login
-      } else {
-        throw new Error('Login failed: No token received');
-      }
+    try {
+      await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password }),
+      });
+      // Registration successful, redirect to login page
+      navigate('/login');
     } catch (err) {
       setError(err.message);
     }
@@ -43,18 +42,29 @@ const LoginPage = () => {
         }}
       >
         <Typography component="h1" variant="h5">
-          Sign in
+          ユーザー登録
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
             fullWidth
+            id="username"
+            label="ユーザー名"
+            name="username"
+            autoComplete="username"
+            autoFocus
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
             id="email"
-            label="Email Address"
+            label="メールアドレス"
             name="email"
             autoComplete="email"
-            autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -63,10 +73,10 @@ const LoginPage = () => {
             required
             fullWidth
             name="password"
-            label="Password"
+            label="パスワード"
             type="password"
             id="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -81,10 +91,10 @@ const LoginPage = () => {
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Sign In
+            登録
           </Button>
-          <Link to="/register" variant="body2">
-            アカウントをお持ちでないですか？ 新規登録
+          <Link to="/login" variant="body2">
+            既にアカウントをお持ちですか？ サインイン
           </Link>
         </Box>
       </Box>
@@ -92,4 +102,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
