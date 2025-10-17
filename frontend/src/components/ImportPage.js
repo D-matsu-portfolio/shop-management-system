@@ -93,7 +93,7 @@ function ImportPage() {
 
       <ImportSection
         title="法定費用マスタ"
-        endpoint="/api/statutory-costs/import"
+        endpoint="/api/estimates/statutory-costs/import"
         onImportSuccess={handleImportSuccess}
       />
     </Box>
