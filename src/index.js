@@ -24,11 +24,11 @@ app.use('/api/auth', require('./routes/authRoutes'));
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
   // Serve the static files from the React app
-  app.use(express.static(path.join(__dirname, '../../frontend/build')));
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
 
   // Handles any requests that don't match the ones above
   app.get('/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/build', 'index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
   });
 } else {
   app.get('/', (req, res) => {
