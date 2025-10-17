@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "build": "npm run build --prefix frontend",
     "dev": "nodemon --exec \"node --max-http-header-size=16384 src/index.js\"",
+    "postinstall": "npm install --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -22,6 +23,6 @@
     "nodemon": "^3.1.10"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
