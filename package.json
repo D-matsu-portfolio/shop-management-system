@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "build": "npm run build --prefix frontend",
+    "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "dev": "nodemon --exec \"node --max-http-header-size=16384 src/index.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
