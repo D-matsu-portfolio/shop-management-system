@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPart from './AddPart';
 import EditPart from './EditPart';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -33,17 +34,15 @@ function PartsPage() {
     setEditPart(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この部品を本当に削除しますか？')) {
-      fetch(`/api/parts/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete part');
-          }
-        })
-        .catch(error => console.error('Error deleting part:', error));
+      try {
+        await apiFetch(`/api/parts/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting part:', error);
+        alert(`部品の削除に失敗しました: ${error.message}`);
+      }
     }
   };
 
@@ -85,13 +84,16 @@ function PartsPage() {
   ];
 
   useEffect(() => {
-    fetch('/api/parts')
-      .then(response => response.json())
-      .then(data => {
+    const fetchParts = async () => {
+      try {
+        const data = await apiFetch('/api/parts');
         setParts(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching parts:', error));
+      } catch (error) {
+        console.error('Error fetching parts:', error);
+      }
+    };
+    fetchParts();
   }, [refetch]);
 
   return (

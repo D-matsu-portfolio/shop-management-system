@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function EditPart({ part, onPartUpdated, open, onClose }) {
   const [formData, setFormData] = useState(part);
@@ -12,24 +13,24 @@ function EditPart({ part, onPartUpdated, open, onClose }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch(`/api/parts/${part.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Part updated:', data);
-          onClose();
-          onPartUpdated();
-        } else {
-          throw new Error(data.message || 'Error updating part');
-        }
-      })
-      .catch(error => console.error('Error updating part:', error));
+    try {
+      const data = await apiFetch(`/api/parts/${part.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Part updated:', data);
+        onClose();
+        onPartUpdated();
+      } else {
+        throw new Error(data.message || 'Error updating part');
+      }
+    } catch (error) {
+      console.error('Error updating part:', error);
+      alert('部品の更新に失敗しました。');
+    }
   };
 
   return (

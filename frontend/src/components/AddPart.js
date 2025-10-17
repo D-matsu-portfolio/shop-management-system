@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function AddPart({ onPartAdded }) {
   const [open, setOpen] = useState(false);
@@ -18,20 +19,20 @@ function AddPart({ onPartAdded }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/parts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Part created:', data);
-        handleClose();
-        onPartAdded();
-      })
-      .catch(error => console.error('Error creating part:', error));
+    try {
+      const data = await apiFetch('/api/parts', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      console.log('Part created:', data);
+      handleClose();
+      onPartAdded();
+    } catch (error) {
+      console.error('Error creating part:', error);
+      alert('部品の作成に失敗しました。');
+    }
   };
 
   return (

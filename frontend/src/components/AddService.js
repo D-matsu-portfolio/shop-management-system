@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function AddService({ onServiceAdded }) {
   const [open, setOpen] = useState(false);
@@ -17,20 +18,20 @@ function AddService({ onServiceAdded }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/services', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Service created:', data);
-        handleClose();
-        onServiceAdded();
-      })
-      .catch(error => console.error('Error creating service:', error));
+    try {
+      const data = await apiFetch('/api/services', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      console.log('Service created:', data);
+      handleClose();
+      onServiceAdded();
+    } catch (error) {
+      console.error('Error creating service:', error);
+      alert('作業の作成に失敗しました。');
+    }
   };
 
   return (

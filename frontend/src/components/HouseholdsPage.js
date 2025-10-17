@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddHousehold from './AddHousehold';
 import EditHousehold from './EditHousehold';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -33,17 +34,15 @@ function HouseholdsPage() {
     setEditHousehold(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この世帯を本当に削除しますか？所属する顧客の世帯情報がリセットされます。')) {
-      fetch(`/api/households/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete household');
-          }
-        })
-        .catch(error => console.error('Error deleting household:', error));
+      try {
+        await apiFetch(`/api/households/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting household:', error);
+        alert('世帯の削除に失敗しました。');
+      }
     }
   };
 
@@ -81,13 +80,16 @@ function HouseholdsPage() {
   ];
 
   useEffect(() => {
-    fetch('/api/households')
-      .then(response => response.json())
-      .then(data => {
+    const fetchHouseholds = async () => {
+      try {
+        const data = await apiFetch('/api/households');
         setHouseholds(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching households:', error));
+      } catch (error) {
+        console.error('Error fetching households:', error);
+      }
+    };
+    fetchHouseholds();
   }, [refetch]);
 
   return (

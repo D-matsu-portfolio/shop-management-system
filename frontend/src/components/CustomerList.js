@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCustomer from './AddCustomer';
 import EditCustomer from './EditCustomer';
+import { apiFetch } from '../utils/api'; // Import apiFetch
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -35,17 +36,15 @@ function CustomerList() {
     setEditCustomer(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この顧客を本当に削除しますか？関連する車両や見積もりもすべて削除されます。')) {
-      fetch(`/api/customers/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete customer');
-          }
-        })
-        .catch(error => console.error('Error deleting customer:', error));
+      try {
+        await apiFetch(`/api/customers/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting customer:', error);
+        alert(`顧客の削除に失敗しました: ${error.message}`);
+      }
     }
   };
 
@@ -87,13 +86,16 @@ function CustomerList() {
   ];
 
   useEffect(() => {
-    fetch('/api/customers')
-      .then(response => response.json())
-      .then(data => {
+    const fetchCustomers = async () => {
+      try {
+        const data = await apiFetch('/api/customers');
         setCustomers(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching customers:', error));
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+      }
+    };
+    fetchCustomers();
   }, [refetch]);
 
   const handleRowClick = (params, event) => {

@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddVehicle from './AddVehicle';
 import EditVehicle from './EditVehicle';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -33,17 +34,15 @@ function VehicleList() {
     setEditVehicle(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('この車両を本当に削除しますか？関連する見積もりや整備記録もすべて削除されます。')) {
-      fetch(`/api/vehicles/${id}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.ok) {
-            handleRefetch();
-          } else {
-            throw new Error('Failed to delete vehicle');
-          }
-        })
-        .catch(error => console.error('Error deleting vehicle:', error));
+      try {
+        await apiFetch(`/api/vehicles/${id}`, { method: 'DELETE' });
+        handleRefetch();
+      } catch (error) {
+        console.error('Error deleting vehicle:', error);
+        alert(`車両の削除に失敗しました: ${error.message}`);
+      }
     }
   };
   
@@ -87,13 +86,16 @@ function VehicleList() {
   ];
 
   useEffect(() => {
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
+    const fetchVehicles = async () => {
+      try {
+        const data = await apiFetch('/api/vehicles');
         setVehicles(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching vehicles:', error));
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+      }
+    };
+    fetchVehicles();
   }, [refetch]);
 
   return (

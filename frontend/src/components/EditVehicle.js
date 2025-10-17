@@ -3,6 +3,7 @@ import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress
 } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
   const [customers, setCustomers] = useState([]);
@@ -15,17 +16,18 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
 
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    fetch('/api/customers')
-      .then(res => res.json())
-      .then(data => {
+    const fetchCustomers = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch('/api/customers');
         setCustomers(data);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Failed to fetch customers", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchCustomers();
   }, [open]);
 
   const handleChange = (e) => {
@@ -36,24 +38,24 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
     setFormData({ ...formData, customer_id: newValue ? newValue.id : null });
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch(`/api/vehicles/${vehicle.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Vehicle updated:', data);
-          onClose();
-          onVehicleUpdated();
-        } else {
-          throw new Error(data.message || 'Error updating vehicle');
-        }
-      })
-      .catch(error => console.error('Error updating vehicle:', error));
+    try {
+      const data = await apiFetch(`/api/vehicles/${vehicle.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Vehicle updated:', data);
+        onClose();
+        onVehicleUpdated();
+      } else {
+        throw new Error(data.message || 'Error updating vehicle');
+      }
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+      alert('車両の更新に失敗しました。');
+    }
   };
 
   const selectedCustomer = customers.find(c => c.id === formData.customer_id) || null;

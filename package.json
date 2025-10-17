@@ -7,7 +7,6 @@
     "start": "node src/index.js",
     "build": "npm run build --prefix frontend",
     "dev": "nodemon --exec \"node --max-http-header-size=16384 src/index.js\"",
-    "postinstall": "npm install --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,12 +15,16 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^4.19.2",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "csv-parser": "^3.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
   },
   "engines": {
-    "node": "20.x"
+    "node": ">=20.x"
   }
 }

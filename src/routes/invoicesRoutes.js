@@ -5,9 +5,10 @@ const {
   createInvoiceFromEstimate,
   getInvoiceById,
 } = require('../controllers/invoicesController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.route('/').get(getInvoices);
-router.route('/from-estimate/:estimateId').post(createInvoiceFromEstimate);
-router.route('/:id').get(getInvoiceById);
+router.route('/').get(protect, getInvoices);
+router.route('/from-estimate/:estimateId').post(protect, createInvoiceFromEstimate);
+router.route('/:id').get(protect, getInvoiceById);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function AddHousehold({ onHouseholdAdded }) {
   const [open, setOpen] = useState(false);
@@ -8,21 +9,21 @@ function AddHousehold({ onHouseholdAdded }) {
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/households', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ household_name: householdName }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Household created:', data);
-        setHouseholdName('');
-        handleClose();
-        onHouseholdAdded();
-      })
-      .catch(error => console.error('Error creating household:', error));
+    try {
+      const data = await apiFetch('/api/households', {
+        method: 'POST',
+        body: JSON.stringify({ household_name: householdName }),
+      });
+      console.log('Household created:', data);
+      setHouseholdName('');
+      handleClose();
+      onHouseholdAdded();
+    } catch (error) {
+      console.error('Error creating household:', error);
+      alert('世帯の作成に失敗しました。');
+    }
   };
 
   return (

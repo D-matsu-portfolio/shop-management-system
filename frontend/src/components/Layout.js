@@ -10,6 +10,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'; // Import for CSV Import
 
 import HouseIcon from '@mui/icons-material/House';
 
@@ -23,6 +24,7 @@ const menuItems = [
   { text: '請求書管理', icon: <DescriptionIcon />, path: '/invoices' },
   { text: '部品マスタ管理', icon: <ExtensionIcon />, path: '/parts' },
   { text: '作業マスタ管理', icon: <MiscellaneousServicesIcon />, path: '/services' },
+  { text: 'CSVインポート', icon: <CloudUploadIcon />, path: '/import' }, // New CSV Import link
 ];
 
 export default function Layout({ children }) {

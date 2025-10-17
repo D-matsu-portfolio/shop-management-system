@@ -5,6 +5,7 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import AddVehicle from './AddVehicle';
 import AddEstimate from './AddEstimate';
+import { apiFetch } from '../utils/api';
 
 const vehicleColumns = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -40,24 +41,22 @@ function CustomerDetailPage() {
   const handleEstimateAdded = useCallback(() => setRefetchHistory(prev => !prev), []);
 
   useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    Promise.all([
-      fetch(`/api/customers/${id}`).then(res => res.json()),
-      fetch(`/api/vehicles/by-customer/${id}`).then(res => res.json()),
-    ])
-    .then(([customerData, vehiclesData]) => {
-      if (isMounted) {
+    const fetchCustomerDetails = async () => {
+      setLoading(true);
+      try {
+        const [customerData, vehiclesData] = await Promise.all([
+          apiFetch(`/api/customers/${id}`),
+          apiFetch(`/api/vehicles/by-customer/${id}`),
+        ]);
         setCustomer(customerData);
         setVehicles(vehiclesData);
+      } catch (error) {
+        console.error('Error fetching customer details:', error);
+      } finally {
         setLoading(false);
       }
-    })
-    .catch(error => {
-      console.error('Error fetching customer details:', error);
-      if (isMounted) setLoading(false);
-    });
-    return () => { isMounted = false };
+    };
+    fetchCustomerDetails();
   }, [id, refetchVehicles]);
 
   useEffect(() => {
@@ -65,21 +64,18 @@ function CustomerDetailPage() {
       setWorkHistory([]);
       return;
     }
-    let isMounted = true;
-    setHistoryLoading(true);
-    fetch(`/api/estimates/by-vehicle/${selectedVehicle.id}`)
-      .then(res => res.json())
-      .then(estimatesData => {
-        if (isMounted) {
-          setWorkHistory(estimatesData);
-          setHistoryLoading(false);
-        }
-      })
-      .catch(error => {
+    const fetchVehicleHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const estimatesData = await apiFetch(`/api/estimates/by-vehicle/${selectedVehicle.id}`);
+        setWorkHistory(estimatesData);
+      } catch (error) {
         console.error('Error fetching vehicle history:', error);
-        if (isMounted) setHistoryLoading(false);
-      });
-    return () => { isMounted = false };
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    fetchVehicleHistory();
   }, [selectedVehicle, refetchHistory]);
 
   const handleVehicleRowClick = (params) => {

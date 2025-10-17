@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import { apiFetch } from '../utils/api';
 
 function EditService({ service, onServiceUpdated, open, onClose }) {
   const [formData, setFormData] = useState(service);
@@ -12,24 +13,24 @@ function EditService({ service, onServiceUpdated, open, onClose }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch(`/api/services/${service.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.id) {
-          console.log('Service updated:', data);
-          onClose();
-          onServiceUpdated();
-        } else {
-          throw new Error(data.message || 'Error updating service');
-        }
-      })
-      .catch(error => console.error('Error updating service:', error));
+    try {
+      const data = await apiFetch(`/api/services/${service.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+      if (data.id) {
+        console.log('Service updated:', data);
+        onClose();
+        onServiceUpdated();
+      } else {
+        throw new Error(data.message || 'Error updating service');
+      }
+    } catch (error) {
+      console.error('Error updating service:', error);
+      alert('作業の更新に失敗しました。');
+    }
   };
 
   return (

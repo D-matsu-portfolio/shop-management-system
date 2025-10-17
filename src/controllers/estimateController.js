@@ -1,4 +1,13 @@
 const db = require('../config/db');
+const csv = require('csv-parser');
+const multer = require('multer');
+const { Readable } = require('stream'); // To convert buffer to stream
+
+// Multer setup for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(), // Store file in memory as a Buffer
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+});
 
 // @desc    Get all estimates
 // @route   GET /api/estimates
@@ -34,7 +43,7 @@ const createEstimate = async (req, res) => {
 
     const estimateQuery = `
       INSERT INTO estimates (customer_id, vehicle_id, estimate_date, status, notes)
-      VALUES ($1, $2, $3, $4, $5) RETURNING id;
+      VALUES (, $2, $3, $4, $5) RETURNING id;
     `;
     const estimateResult = await client.query(estimateQuery, [customer_id, vehicle_id, estimate_date, status, notes]);
     const estimateId = estimateResult.rows[0].id;
@@ -45,7 +54,7 @@ const createEstimate = async (req, res) => {
       sub_total += itemTotalPrice;
       const lineItemQuery = `
         INSERT INTO estimate_line_items (estimate_id, item_type, part_id, service_id, description, quantity, unit_price, total_price)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+        VALUES (, $2, $3, $4, $5, $6, $7, $8);
       `;
       await client.query(lineItemQuery, [
         estimateId, 
@@ -62,7 +71,7 @@ const createEstimate = async (req, res) => {
     const tax = sub_total * 0.10;
     const grand_total = sub_total + tax;
 
-    const updateQuery = `UPDATE estimates SET sub_total = $1, tax = $2, grand_total = $3 WHERE id = $4`;
+    const updateQuery = `UPDATE estimates SET sub_total = , tax = $2, grand_total = $3 WHERE id = $4`;
     await client.query(updateQuery, [sub_total, tax, grand_total, estimateId]);
 
     await client.query('COMMIT'); // Commit transaction
@@ -91,7 +100,7 @@ const getShakenFees = async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      'SELECT * FROM statutory_costs WHERE (weight_min <= $1 AND weight_max > $1) OR (item_name LIKE \'%自賠責%\' AND weight_max > $1) OR (item_name LIKE \'%印紙代%\')',
+      'SELECT * FROM statutory_costs WHERE (weight_min <=  AND weight_max > ) OR (item_name LIKE \'%自賠責%\' AND weight_max > ) OR (item_name LIKE \'%印紙代%\')',
       [weight]
     );
     res.json(rows);
@@ -112,7 +121,7 @@ const getEstimatesByCustomerId = async (req, res) => {
         v.make, v.model, v.license_plate
       FROM estimates e
       LEFT JOIN vehicles v ON e.vehicle_id = v.id
-      WHERE e.customer_id = $1 
+      WHERE e.customer_id =  
       ORDER BY e.estimate_date DESC
     `, [req.params.customerId]);
     res.json(rows);
@@ -127,7 +136,7 @@ const getEstimatesByCustomerId = async (req, res) => {
 // @access  Public
 const getEstimatesByVehicleId = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM estimates WHERE vehicle_id = $1 ORDER BY estimate_date DESC', [req.params.vehicleId]);
+    const { rows } = await db.query('SELECT * FROM estimates WHERE vehicle_id =  ORDER BY estimate_date DESC', [req.params.vehicleId]);
     res.json(rows);
   } catch (err) {
     console.error('getEstimatesByVehicleId Error:', err);
@@ -146,7 +155,7 @@ const getEstimateById = async (req, res) => {
       FROM estimates e
       LEFT JOIN customers c ON e.customer_id = c.id
       LEFT JOIN vehicles v ON e.vehicle_id = v.id
-      WHERE e.id = $1
+      WHERE e.id = 
     `;
     const estimateResult = await db.query(estimateQuery, [req.params.id]);
 
@@ -156,7 +165,7 @@ const getEstimateById = async (req, res) => {
 
     const estimate = estimateResult.rows[0];
 
-    const lineItemsQuery = `SELECT * FROM estimate_line_items WHERE estimate_id = $1 ORDER BY id`;
+    const lineItemsQuery = `SELECT * FROM estimate_line_items WHERE estimate_id =  ORDER BY id`;
     const lineItemsResult = await db.query(lineItemsQuery, [req.params.id]);
 
     estimate.line_items = lineItemsResult.rows;
@@ -175,7 +184,7 @@ const getEstimateById = async (req, res) => {
 const deleteEstimate = async (req, res) => {
   try {
     // Deleting an estimate will also delete its line items due to ON DELETE CASCADE
-    const { rows } = await db.query('DELETE FROM estimates WHERE id = $1 RETURNING *', [req.params.id]);
+    const { rows } = await db.query('DELETE FROM estimates WHERE id =  RETURNING *', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Estimate not found' });
     }
@@ -186,6 +195,81 @@ const deleteEstimate = async (req, res) => {
   }
 };
 
+// @desc    Import statutory costs from CSV
+// @route   POST /api/statutory-costs/import
+// @access  Private
+const importStatutoryCosts = async (req, res) => {
+  // Use upload.single('file') as a middleware here
+  upload.single('file')(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ msg: `Multer error: ${err.message}` });
+    } else if (err) {
+      return res.status(500).json({ msg: `Unknown error: ${err.message}` });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ msg: 'No file uploaded' });
+    }
+
+    const costsToImport = [];
+    const readableStream = Readable.from(req.file.buffer.toString('utf-8')); // Convert buffer to readable stream
+
+    readableStream
+      .pipe(csv())
+      .on('data', (data) => {
+        // Basic validation and type conversion
+        costsToImport.push({
+          item_name: data.item_name,
+          weight_min: parseInt(data.weight_min) || 0,
+          weight_max: parseInt(data.weight_max) || 99999, // Default to a large number if not provided
+          cost: parseFloat(data.cost) || 0,
+        });
+      })
+      .on('end', async () => {
+        if (costsToImport.length === 0) {
+          return res.status(400).json({ msg: 'CSV contains no data or invalid format' });
+        }
+
+        const client = await db.pool.connect();
+        try {
+          await client.query('BEGIN');
+          let importedCount = 0;
+
+          for (const cost of costsToImport) {
+            // UPSERT operation: INSERT if item_name, weight_min, weight_max combination does not exist, UPDATE if it does
+            // Assuming item_name, weight_min, weight_max form a unique key for upsert
+            const upsertQuery = `
+              INSERT INTO statutory_costs (item_name, weight_min, weight_max, cost)
+              VALUES (, $2, $3, $4)
+              ON CONFLICT (item_name, weight_min, weight_max) DO UPDATE
+              SET cost = EXCLUDED.cost
+              RETURNING id;
+            `;
+            await client.query(upsertQuery, [
+              cost.item_name,
+              cost.weight_min,
+              cost.weight_max,
+              cost.cost,
+            ]);
+            importedCount++;
+          }
+
+          await client.query('COMMIT');
+          res.status(200).json({ msg: `${importedCount} statutory costs imported successfully` });
+        } catch (dbErr) {
+          await client.query('ROLLBACK');
+          console.error('importStatutoryCosts DB Error:', dbErr);
+          res.status(500).json({ msg: 'Database error during import', error: dbErr.message });
+        } finally {
+          client.release();
+        }
+      })
+      .on('error', (csvErr) => {
+        console.error('CSV parsing error:', csvErr);
+        res.status(400).json({ msg: 'Error parsing CSV file', error: csvErr.message });
+      });
+  });
+};
 
 module.exports = {
   getEstimates,
@@ -195,4 +279,5 @@ module.exports = {
   getEstimatesByVehicleId,
   getEstimateById,
   deleteEstimate,
+  importStatutoryCosts,
 };

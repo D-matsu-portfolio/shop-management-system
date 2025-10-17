@@ -4,6 +4,7 @@ import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -74,13 +75,16 @@ function InvoicesPage() {
   ];
 
   useEffect(() => {
-    fetch('/api/invoices')
-      .then(response => response.json())
-      .then(data => {
+    const fetchInvoices = async () => {
+      try {
+        const data = await apiFetch('/api/invoices');
         setInvoices(data);
         setFilteredRows(data);
-      })
-      .catch(error => console.error('Error fetching invoices:', error));
+      } catch (error) {
+        console.error('Error fetching invoices:', error);
+      }
+    };
+    fetchInvoices();
   }, [refetch]);
 
   const handleRowClick = (params, event) => {

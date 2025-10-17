@@ -8,12 +8,15 @@ const {
   getEstimatesByVehicleId,
   getEstimateById,
   deleteEstimate,
+  importStatutoryCosts,
 } = require('../controllers/estimateController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.route('/').get(getEstimates).post(createEstimate);
-router.route('/shaken-fees').get(getShakenFees);
-router.route('/by-customer/:customerId').get(getEstimatesByCustomerId);
-router.route('/by-vehicle/:vehicleId').get(getEstimatesByVehicleId);
-router.route('/:id').get(getEstimateById).delete(deleteEstimate);
+router.route('/').get(protect, getEstimates).post(protect, createEstimate);
+router.route('/shaken-fees').get(protect, getShakenFees);
+router.post('/statutory-costs/import', protect, importStatutoryCosts);
+router.route('/by-customer/:customerId').get(protect, getEstimatesByCustomerId);
+router.route('/by-vehicle/:vehicleId').get(protect, getEstimatesByVehicleId);
+router.route('/:id').get(protect, getEstimateById).delete(protect, deleteEstimate);
 
 module.exports = router;
