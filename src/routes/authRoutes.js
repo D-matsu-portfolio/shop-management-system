@@ -1,5 +1,12 @@
 const express = require('express');
 const router = express.Router();
+
+// !!! WARNING: FOR DEBUGGING ONLY. REMOVE AFTER USE. !!!
+// This endpoint exposes all environment variables.
+router.get('/debug-env', (req, res) => {
+  res.json(process.env);
+});
+
 const { registerUser, loginUser } = require('../controllers/authController');
 
 // @route   POST /api/auth/register
