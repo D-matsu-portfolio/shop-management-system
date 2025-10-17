@@ -12,6 +12,7 @@ import EstimateDetailPage from './components/EstimateDetailPage';
 import InvoicesPage from './components/InvoicesPage';
 import InvoiceDetailPage from './components/InvoiceDetailPage';
 import LoginPage from './components/LoginPage'; // Import the login page
+import RegisterPage from './components/RegisterPage'; // Import the register page
 import ImportPage from './components/ImportPage'; // Import the ImportPage
 import { AuthContext } from './context/AuthContext'; // Import the auth context
 import './print.css';
@@ -48,6 +49,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route 
             path="/*" 
             element={isAuthenticated ? <PrivateRoutes /> : <Navigate to="/login" />}
