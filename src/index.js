@@ -1,6 +1,9 @@
 const express = require('express');
 const path = require('path');
-require('dotenv').config();
+// .envファイルは本番環境では使用しない
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 const port = process.env.PORT || 3000; // Use Render's port if available
