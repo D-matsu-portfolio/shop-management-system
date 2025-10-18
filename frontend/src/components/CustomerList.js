@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import EditIcon from '@mui/icons-material/Edit';
@@ -10,7 +10,7 @@ import EditCustomer from './EditCustomer';
 import { apiFetch } from '../utils/api'; // Import apiFetch
 
 function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
+  return string.replace(/[.*+?^${}()|[\\\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 function CustomerList() {
@@ -21,6 +21,8 @@ function CustomerList() {
   const [editCustomer, setEditCustomer] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -128,6 +130,16 @@ function CustomerList() {
           sx={{ '& .MuiDataGrid-cell:hover': { cursor: 'pointer' } }}
           slots={{ toolbar: GridToolbar }}
           localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                household_name: !isMobile,
+                phone_number: !isMobile,
+                email: !isMobile,
+                address: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       {editCustomer && (

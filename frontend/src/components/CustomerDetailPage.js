@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Paper, Box, Typography, Grid, Card, CardContent, CircularProgress, Button } from '@mui/material';
+import { Paper, Box, Typography, Grid, Card, CardContent, CircularProgress, Button, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import AddVehicle from './AddVehicle';
@@ -35,6 +35,9 @@ function CustomerDetailPage() {
   
   const [refetchVehicles, setRefetchVehicles] = useState(false);
   const [refetchHistory, setRefetchHistory] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleVehicleAdded = useCallback(() => setRefetchVehicles(prev => !prev), []);
   const handleEstimateAdded = useCallback(() => setRefetchHistory(prev => !prev), []);
@@ -91,43 +94,82 @@ function CustomerDetailPage() {
 
   return (
     <Box sx={{ my: 3 }}>
-      <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4}}>
-        <Card sx={{ flexGrow: 1 }}><CardContent>
-          <Typography variant="h4" component="h1" gutterBottom>{customer.name}</Typography>
-          <Typography variant="body1"><strong>メール:</strong> {customer.email}</Typography>
-          <Typography variant="body1"><strong>電話番号:</strong> {customer.phone_number}</Typography>
-          <Typography variant="body1"><strong>住所:</strong> {customer.address}</Typography>
-        </CardContent></Card>
-        <Box sx={{display: 'flex', flexDirection: 'column', gap: 1, ml: 2}}>
-            <AddVehicle 
-              onVehicleAdded={handleVehicleAdded} 
-              initialCustomer={customer} 
-              renderOpenButton={(handleClickOpen) => (
-                <Button variant="contained" onClick={handleClickOpen}>車両を追加</Button>
-              )}
-            />
-            <Button 
-              component={Link} 
-              to="/estimates/new"
-              state={{ initialCustomer: customer, initialVehicle: selectedVehicle }}
-              variant="contained" 
-              color="secondary" 
-              disabled={!selectedVehicle}
-            >
-              選択中の車両で見積もりを作成
-            </Button>
-        </Box>
-      </Box>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ flexGrow: 1 }}><CardContent>
+            <Typography variant="h4" component="h1" gutterBottom>{customer.name}</Typography>
+            <Typography variant="body1"><strong>メール:</strong> {customer.email}</Typography>
+            <Typography variant="body1"><strong>電話番号:</strong> {customer.phone_number}</Typography>
+            <Typography variant="body1"><strong>住所:</strong> {customer.address}</Typography>
+          </CardContent></Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Box sx={{display: 'flex', flexDirection: 'column', gap: 1, height: '100%', justifyContent: 'space-around'}}>
+              <AddVehicle 
+                onVehicleAdded={handleVehicleAdded} 
+                initialCustomer={customer} 
+                renderOpenButton={(handleClickOpen) => (
+                  <Button variant="contained" onClick={handleClickOpen}>車両を追加</Button>
+                )}
+              />
+              <Button 
+                component={Link} 
+                to="/estimates/new"
+                state={{ initialCustomer: customer, initialVehicle: selectedVehicle }}
+                variant="contained" 
+                color="secondary" 
+                disabled={!selectedVehicle}
+              >
+                選択中の車両で見積もりを作成
+              </Button>
+          </Box>
+        </Grid>
+      </Grid>
 
       <Box sx={{ my: 4 }}>
         <Typography variant="h5" component="h2" gutterBottom>所有車両 (車両を選択すると、下の履歴が更新されます)</Typography>
-        <Paper style={{ height: 300, width: '100%' }}><DataGrid rows={vehicles} columns={vehicleColumns} onRowClick={handleVehicleRowClick} sx={{cursor: 'pointer'}} slots={{ toolbar: GridToolbar }} localeText={jaJP.components.MuiDataGrid.defaultProps.localeText} /></Paper>
+        <Paper style={{ height: 300, width: '100%' }}>
+          <DataGrid 
+            rows={vehicles} 
+            columns={vehicleColumns} 
+            onRowClick={handleVehicleRowClick} 
+            sx={{cursor: 'pointer'}} 
+            slots={{ toolbar: GridToolbar }} 
+            localeText={jaJP.components.MuiDataGrid.defaultProps.localeText} 
+            initialState={{
+              columns: {
+                columnVisibilityModel: {
+                  id: !isMobile,
+                  year: !isMobile,
+                  weight: !isMobile,
+                  vin: !isMobile,
+                },
+              },
+            }}
+          />
+        </Paper>
       </Box>
 
       <Box sx={{ my: 4 }}>
         <Typography variant="h5" component="h2" gutterBottom>作業履歴 (見積もり)</Typography>
         <Paper style={{ height: 300, width: '100%' }}>
-          {historyLoading ? <CircularProgress /> : <DataGrid rows={workHistory} columns={historyColumns} onRowClick={(params) => navigate(`/estimates/${params.id}`)} sx={{cursor: 'pointer'}} slots={{ toolbar: GridToolbar }} localeText={jaJP.components.MuiDataGrid.defaultProps.localeText} />}
+          {historyLoading ? <CircularProgress /> : 
+            <DataGrid 
+              rows={workHistory} 
+              columns={historyColumns} 
+              onRowClick={(params) => navigate(`/estimates/${params.id}`)} 
+              sx={{cursor: 'pointer'}} 
+              slots={{ toolbar: GridToolbar }} 
+              localeText={jaJP.components.MuiDataGrid.defaultProps.localeText} 
+              initialState={{
+                columns: {
+                  columnVisibilityModel: {
+                    id: !isMobile,
+                    status: !isMobile,
+                  },
+                },
+              }}
+            />}
         </Paper>
       </Box>
 

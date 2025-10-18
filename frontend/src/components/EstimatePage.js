@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Box, Typography, IconButton, TextField, Button } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, Button, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -17,6 +17,8 @@ function EstimatePage() {
   const [filteredRows, setFilteredRows] = useState([]);
   const [refetch, setRefetch] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -112,6 +114,14 @@ function EstimatePage() {
           sx={{ '& .MuiDataGrid-cell:hover': { cursor: 'pointer' } }}
           slots={{ toolbar: GridToolbar }}
           localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                license_plate: !isMobile,
+                status: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       {/* Edit Estimate Dialog will be added later */}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddVehicle from './AddVehicle';
+
 import EditVehicle from './EditVehicle';
 import { apiFetch } from '../utils/api';
 
@@ -19,6 +19,8 @@ function VehicleList() {
   const [refetch, setRefetch] = useState(false);
   const [editVehicle, setEditVehicle] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -104,7 +106,7 @@ function VehicleList() {
         車両管理
       </Typography>
       <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 2}}>
-        <AddVehicle onVehicleAdded={handleRefetch} />
+        
         <TextField
           variant="outlined"
           value={searchText}
@@ -119,6 +121,17 @@ function VehicleList() {
           columns={columns}
           slots={{ toolbar: GridToolbar }}
           localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                id: !isMobile,
+                customer_id: !isMobile,
+                year: !isMobile,
+                weight: !isMobile,
+                vin: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       {editVehicle && (

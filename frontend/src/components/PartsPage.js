@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import EditIcon from '@mui/icons-material/Edit';
@@ -19,6 +19,8 @@ function PartsPage() {
   const [refetch, setRefetch] = useState(false);
   const [editPart, setEditPart] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -117,6 +119,16 @@ function PartsPage() {
           columns={columns}
           slots={{ toolbar: GridToolbar }}
           localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                id: !isMobile,
+                part_number: !isMobile,
+                description: !isMobile,
+                cost_price: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       {editPart && (

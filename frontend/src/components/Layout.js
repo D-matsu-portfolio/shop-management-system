@@ -1,78 +1,181 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { 
+  Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton, 
+  ListItemIcon, ListItemText, Collapse, useTheme, useMediaQuery, IconButton 
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import BuildIcon from '@mui/icons-material/Build';
-
 import ReceiptIcon from '@mui/icons-material/Receipt';
-
 import ExtensionIcon from '@mui/icons-material/Extension';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import DescriptionIcon from '@mui/icons-material/Description';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload'; // Import for CSV Import
-import GavelIcon from '@mui/icons-material/Gavel'; // Import for Statutory Costs
-
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import GavelIcon from '@mui/icons-material/Gavel';
 import HouseIcon from '@mui/icons-material/House';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: '顧客管理', icon: <PeopleIcon />, path: '/customers' },
-  { text: '世帯管理', icon: <HouseIcon />, path: '/households' },
-  { text: '車両管理', icon: <DirectionsCarIcon />, path: '/vehicles' },
-  { text: '見積もり管理', icon: <ReceiptIcon />, path: '/estimates' },
-  { text: '請求書管理', icon: <DescriptionIcon />, path: '/invoices' },
-  { text: '部品マスタ管理', icon: <ExtensionIcon />, path: '/parts' },
-  { text: '作業マスタ管理', icon: <MiscellaneousServicesIcon />, path: '/services' },
-  { text: '法定費用マスタ', icon: <GavelIcon />, path: '/statutory-costs' },
-  { text: 'CSVインポート', icon: <CloudUploadIcon />, path: '/import' }, // New CSV Import link
+// Define a reusable SubMenu component
+function SubMenu({ item, onLinkClick }) {
+  const [open, setOpen] = useState(false);
+  const handleClick = () => {
+    setOpen(!open);
+  };
+
+  return (
+    <>
+      <ListItemButton onClick={handleClick}>
+        <ListItemIcon>{item.icon}</ListItemIcon>
+        <ListItemText primary={item.text} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          {item.subItems.map((subItem) => (
+            <ListItem key={subItem.text} disablePadding component={RouterLink} to={subItem.path} sx={{ color: 'inherit', textDecoration: 'none', pl: 4 }} onClick={onLinkClick}>
+              <ListItemButton>
+                <ListItemIcon>
+                  {subItem.icon}
+                </ListItemIcon>
+                <ListItemText primary={subItem.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Collapse>
+    </>
+  );
+}
+
+const menuGroups = [
+    {
+        text: '顧客・車両',
+        icon: <PeopleIcon />,
+        subItems: [
+          { text: '顧客管理', path: '/customers', icon: <PeopleIcon /> },
+          { text: '世帯管理', path: '/households', icon: <HouseIcon /> },
+          { text: '車両管理', path: '/vehicles', icon: <DirectionsCarIcon /> },
+        ],
+      },
+      {
+        text: '伝票管理',
+        icon: <DescriptionIcon />,
+        subItems: [
+          { text: '見積もり管理', path: '/estimates', icon: <ReceiptIcon /> },
+          { text: '請求書管理', path: '/invoices', icon: <DescriptionIcon /> },
+        ],
+      },
+      {
+        text: 'マスタ設定',
+        icon: <BuildIcon />,
+        subItems: [
+          { text: '部品マスタ', path: '/parts', icon: <ExtensionIcon /> },
+          { text: '作業マスタ', path: '/services', icon: <MiscellaneousServicesIcon /> },
+          { text: '法定費用マスタ', path: '/statutory-costs', icon: <GavelIcon /> },
+        ],
+      },
+       {
+        text: 'その他',
+        icon: <MiscellaneousServicesIcon />,
+        subItems: [
+            { text: 'CSVインポート', path: '/import', icon: <CloudUploadIcon /> },
+        ]
+      }
 ];
 
 export default function Layout({ children }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
+  const drawerContent = (
+    <div>
+      <Toolbar />
+      <List>
+        {menuGroups.map((item) => (
+          <SubMenu item={item} key={item.text} onLinkClick={handleLinkClick} />
+        ))}
+      </List>
+    </div>
+  );
+
   return (
     <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
-        sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px` }}
+        sx={{
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
+        }}
         className="no-print"
       >
         <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { md: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
           <Typography variant="h6" noWrap component="div">
             自動車整備管理システム
           </Typography>
         </Toolbar>
       </AppBar>
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-          },
-        }}
-        variant="permanent"
-        anchor="left"
+      <Box
+        component="nav"
+        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        aria-label="mailbox folders"
         className="no-print"
       >
-        <Toolbar />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding component={RouterLink} to={item.path} sx={{ color: 'inherit', textDecoration: 'none' }}>
-              <ListItemButton>
-                <ListItemIcon>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+        {isMobile ? (
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            }}
+          >
+            {drawerContent}
+          </Drawer>
+        ) : (
+          <Drawer
+            variant="permanent"
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            }}
+            open
+          >
+            {drawerContent}
+          </Drawer>
+        )}
+      </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
+        sx={{ flexGrow: 1, p: 3, width: { md: `calc(100% - ${drawerWidth}px)` } }}
       >
         <Toolbar /> 
         {children}
