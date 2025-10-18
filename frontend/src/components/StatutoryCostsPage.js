@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
+import { Box, Typography, Button, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { apiFetch } from '../utils/api';
 import StatutoryCostForm from './StatutoryCostForm';
@@ -9,6 +9,8 @@ const StatutoryCostsPage = () => {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCost, setEditingCost] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const fetchCosts = async () => {
     setLoading(true);
@@ -112,6 +114,15 @@ const StatutoryCostsPage = () => {
           rowsPerPageOptions={[10, 25, 50]}
           autoHeight
           loading={loading}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                weight_min: !isMobile,
+                weight_max: !isMobile,
+                notes: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       <StatutoryCostForm

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import EditIcon from '@mui/icons-material/Edit';
@@ -19,6 +19,8 @@ function HouseholdsPage() {
   const [refetch, setRefetch] = useState(false);
   const [editHousehold, setEditHousehold] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -113,6 +115,13 @@ function HouseholdsPage() {
           columns={columns}
           slots={{ toolbar: GridToolbar }}
           localeText={jaJP.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                id: !isMobile,
+              },
+            },
+          }}
         />
       </Paper>
       {editHousehold && (
