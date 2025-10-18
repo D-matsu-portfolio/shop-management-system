@@ -1,10 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
-  Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton, 
-  ListItemIcon, ListItemText, Collapse, useTheme, useMediaQuery, IconButton, Button
+  Box, Drawer as MuiDrawer, AppBar as MuiAppBar, Toolbar, Typography, List, ListItem, ListItemButton, 
+  ListItemIcon, ListItemText, Collapse, useTheme, IconButton, Button, CssBaseline, Divider
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import PeopleIcon from '@mui/icons-material/People';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import BuildIcon from '@mui/icons-material/Build';
@@ -19,32 +21,108 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { AuthContext } from '../context/AuthContext';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const drawerWidth = 240;
 
+const openedMixin = (theme) => ({
+  width: drawerWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+});
+
+const closedMixin = (theme) => ({
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: 'hidden',
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up('sm')]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+});
+
+const AppBar = styled(MuiAppBar, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(['width', 'margin'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  boxSizing: 'border-box',
+  ...(open && {
+    ...openedMixin(theme),
+    '& .MuiDrawer-paper': openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    '& .MuiDrawer-paper': closedMixin(theme),
+  }),
+}));
+
+
+// Define a reusable NavItem component for top-level links
+function NavItem({ item, open, onLinkClick }) {
+  return (
+    <ListItem disablePadding sx={{ display: 'block' }}>
+      <ListItemButton
+        component={RouterLink}
+        to={item.path}
+        onClick={onLinkClick}
+        sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5, color: 'inherit', textDecoration: 'none' }}
+      >
+        <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+        <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+      </ListItemButton>
+    </ListItem>
+  );
+}
+
 // Define a reusable SubMenu component
-function SubMenu({ item, onLinkClick }) {
-  const [open, setOpen] = useState(false);
+function SubMenu({ item, open, onLinkClick }) {
+  const [subMenuOpen, setSubMenuOpen] = useState(false);
   const handleClick = () => {
-    setOpen(!open);
+    setSubMenuOpen(!subMenuOpen);
   };
 
   return (
     <>
-      <ListItemButton onClick={handleClick}>
-        <ListItemIcon>{item.icon}</ListItemIcon>
-        <ListItemText primary={item.text} />
-        {open ? <ExpandLess /> : <ExpandMore />}
+      <ListItemButton sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }} onClick={handleClick}>
+        <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+        <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+        {open ? (subMenuOpen ? <ExpandLess /> : <ExpandMore />) : null}
       </ListItemButton>
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={subMenuOpen && open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           {item.subItems.map((subItem) => (
-            <ListItem key={subItem.text} disablePadding component={RouterLink} to={subItem.path} sx={{ color: 'inherit', textDecoration: 'none', pl: 4 }} onClick={onLinkClick}>
-              <ListItemButton>
-                <ListItemIcon>
-                  {subItem.icon}
-                </ListItemIcon>
-                <ListItemText primary={subItem.text} />
+            <ListItem key={subItem.text} disablePadding sx={{ display: 'block' }}>
+                <ListItemButton
+                    component={RouterLink}
+                    to={subItem.path}
+                    onClick={onLinkClick}
+                    sx={{ pl: 4, color: 'inherit', textDecoration: 'none' }}
+                >
+                    <ListItemIcon>{subItem.icon}</ListItemIcon>
+                    <ListItemText primary={subItem.text} />
               </ListItemButton>
             </ListItem>
           ))}
@@ -56,6 +134,13 @@ function SubMenu({ item, onLinkClick }) {
 
 const menuGroups = [
     {
+        type: 'item',
+        text: 'ダッシュボード',
+        path: '/',
+        icon: <DashboardIcon />,
+    },
+    {
+        type: 'submenu',
         text: '顧客・車両',
         icon: <PeopleIcon />,
         subItems: [
@@ -65,6 +150,7 @@ const menuGroups = [
         ],
       },
       {
+        type: 'submenu',
         text: '伝票管理',
         icon: <DescriptionIcon />,
         subItems: [
@@ -73,6 +159,7 @@ const menuGroups = [
         ],
       },
       {
+        type: 'submenu',
         text: 'マスタ設定',
         icon: <BuildIcon />,
         subItems: [
@@ -82,6 +169,7 @@ const menuGroups = [
         ],
       },
        {
+        type: 'submenu',
         text: 'その他',
         icon: <MiscellaneousServicesIcon />,
         subItems: [
@@ -90,50 +178,42 @@ const menuGroups = [
       }
 ];
 
-export default function Layout({ children }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+export default function Layout() {
+  const [open, setOpen] = useState(true);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const handleDrawerOpen = () => {
+    setOpen(true);
   };
 
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setMobileOpen(false);
-    }
+  const handleDrawerClose = () => {
+    setOpen(false);
   };
 
   const drawerContent = (
-    <div>
-      <Toolbar />
-      <List>
-        {menuGroups.map((item) => (
-          <SubMenu item={item} key={item.text} onLinkClick={handleLinkClick} />
-        ))}
-      </List>
-    </div>
+    <List>
+      {menuGroups.map((item) => {
+        if (item.type === 'item') {
+          return <NavItem item={item} key={item.text} open={open} />;
+        } else if (item.type === 'submenu') {
+          return <SubMenu item={item} key={item.text} open={open} />;
+        }
+        return null;
+      })}
+    </List>
   );
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-        }}
-        className="no-print"
-      >
+      <CssBaseline />
+      <AppBar position="fixed" open={open} className="no-print">
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
+            onClick={handleDrawerOpen}
             edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
+            sx={{ mr: 2, ...(open && { display: 'none' }) }}
           >
             <MenuIcon />
           </IconButton>
@@ -147,47 +227,15 @@ export default function Layout({ children }) {
           )}
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-        aria-label="mailbox folders"
-        className="no-print"
-      >
-        {isMobile ? (
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}
-            sx={{
-              display: { xs: 'block', md: 'none' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-          >
-            {drawerContent}
-          </Drawer>
-        ) : (
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: 'none', md: 'block' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-            }}
-            open
-          >
-            {drawerContent}
-          </Drawer>
-        )}
-      </Box>
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { md: `calc(100% - ${drawerWidth}px)` } }}
-      >
-        <Toolbar /> 
-        {children}
-      </Box>
+      <Drawer variant="permanent" open={open} className="no-print">
+        <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: [1] }}>
+          <IconButton onClick={handleDrawerClose}>
+            <ChevronLeftIcon />
+          </IconButton>
+        </Toolbar>
+        <Divider />
+        {drawerContent}
+      </Drawer>
     </Box>
   );
 }

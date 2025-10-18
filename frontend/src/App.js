@@ -11,7 +11,7 @@ import CustomerDetailPage from './components/CustomerDetailPage';
 import HouseholdsPage from './components/HouseholdsPage';
 import VehicleList from './components/VehicleList';
 import EstimatePage from './components/EstimatePage';
-import AddEstimate from './components/AddEstimate'; // Assuming this is the new estimate page
+
 import EstimateDetailPage from './components/EstimateDetailPage';
 import InvoicesPage from './components/InvoicesPage';
 import InvoiceDetailPage from './components/InvoiceDetailPage';
@@ -51,7 +51,7 @@ function App() {
             <Route path="/households" element={<ProtectedRoute><HouseholdsPage /></ProtectedRoute>} />
             <Route path="/vehicles" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
             <Route path="/estimates" element={<ProtectedRoute><EstimatePage /></ProtectedRoute>} />
-            <Route path="/estimates/new" element={<ProtectedRoute><AddEstimate /></ProtectedRoute>} />
+            <Route path="/estimates/new" element={<ProtectedRoute><EstimateDetailPage /></ProtectedRoute>} />
             <Route path="/estimates/:id" element={<ProtectedRoute><EstimateDetailPage /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
             <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
