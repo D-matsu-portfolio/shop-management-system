@@ -7,7 +7,7 @@ const {
   deleteService,
   importServices,
 } = require('../controllers/servicesController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getServices).post(protect, createService);
 router.post('/import', protect, importServices);

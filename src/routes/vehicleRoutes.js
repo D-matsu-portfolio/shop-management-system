@@ -8,7 +8,7 @@ const {
   deleteVehicle,
   getVehiclesByCustomerId,
 } = require('../controllers/vehicleController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getVehicles).post(protect, createVehicle);
 router.route('/by-customer/:customerId').get(protect, getVehiclesByCustomerId);

@@ -11,7 +11,7 @@ const {
   deleteEstimate,
   importStatutoryCosts,
 } = require('../controllers/estimateController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getEstimates).post(protect, createEstimate);
 router.route('/shaken-fees').get(protect, getShakenFees);

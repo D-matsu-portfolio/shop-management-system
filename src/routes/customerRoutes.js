@@ -7,7 +7,7 @@ const {
   updateCustomer,
   deleteCustomer,
 } = require('../controllers/customerController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getCustomers).post(protect, createCustomer);
 router

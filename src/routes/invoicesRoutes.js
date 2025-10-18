@@ -5,7 +5,7 @@ const {
   createInvoiceFromEstimate,
   getInvoiceById,
 } = require('../controllers/invoicesController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getInvoices);
 router.route('/from-estimate/:estimateId').post(protect, createInvoiceFromEstimate);

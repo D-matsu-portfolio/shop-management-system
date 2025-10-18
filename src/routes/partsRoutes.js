@@ -7,7 +7,7 @@ const {
   deletePart,
   importParts,
 } = require('../controllers/partsController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getParts).post(protect, createPart);
 router.post('/import', protect, importParts);

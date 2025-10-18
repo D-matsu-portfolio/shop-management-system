@@ -1,5 +1,6 @@
 const express = require('express');
-const path = require('path');
+const servicesRoutes = require('./routes/servicesRoutes');
+const invoicesRoutes = require('./routes/invoicesRoutes');
 // .envファイルは本番環境では使用しない
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -18,7 +19,10 @@ app.use('/api/estimates', require('./routes/estimateRoutes'));
 app.use('/api/parts', require('./routes/partsRoutes'));
 app.use('/api/services', require('./routes/servicesRoutes'));
 app.use('/api/households', require('./routes/householdsRoutes'));
-app.use('/api/invoices', require('./routes/invoicesRoutes'));
+app.use('/api/invoices', invoicesRoutes);
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+
+const PORT = process.env.PORT || 3001;
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/statutory-costs', require('./routes/statutoryCostsRoutes'));
 

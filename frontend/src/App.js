@@ -1,67 +1,72 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Box, Toolbar } from '@mui/material';
+import { AuthContext } from './context/AuthContext';
+
+// Layout and Pages
 import Layout from './components/Layout';
+import DashboardPage from './components/DashboardPage';
 import CustomerList from './components/CustomerList';
-import VehicleList from './components/VehicleList';
-import EstimatePage from './components/EstimatePage';
-import PartsPage from './components/PartsPage';
-import ServicesPage from './components/ServicesPage';
 import CustomerDetailPage from './components/CustomerDetailPage';
 import HouseholdsPage from './components/HouseholdsPage';
+import VehicleList from './components/VehicleList';
+import EstimatePage from './components/EstimatePage';
+import AddEstimate from './components/AddEstimate'; // Assuming this is the new estimate page
 import EstimateDetailPage from './components/EstimateDetailPage';
 import InvoicesPage from './components/InvoicesPage';
 import InvoiceDetailPage from './components/InvoiceDetailPage';
-import StatutoryCostsPage from './components/StatutoryCostsPage'; // Import the new page
-import LoginPage from './components/LoginPage'; // Import the login page
-import RegisterPage from './components/RegisterPage'; // Import the register page
-import ImportPage from './components/ImportPage'; // Import the ImportPage
-import { AuthContext } from './context/AuthContext'; // Import the auth context
-import './print.css';
-import { CssBaseline, Typography } from '@mui/material';
+import PartsPage from './components/PartsPage';
+import ServicesPage from './components/ServicesPage';
+import StatutoryCostsPage from './components/StatutoryCostsPage';
+import ImportPage from './components/ImportPage';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 
-// A wrapper for protected routes
-const PrivateRoutes = () => (
-  <Layout>
-    <Routes>
-      <Route path="/" element={<Typography>ダッシュボードへようこそ！</Typography>} />
-      <Route path="/customers" element={<CustomerList />} />
-      <Route path="/customers/:id" element={<CustomerDetailPage />} />
-      <Route path="/households" element={<HouseholdsPage />} />
-      <Route path="/vehicles" element={<VehicleList />} />
-      <Route path="/estimates" element={<EstimatePage />} />
-      <Route path="/estimates/new" element={<EstimateDetailPage />} />
-      <Route path="/estimates/:id" element={<EstimateDetailPage />} />
-      <Route path="/invoices" element={<InvoicesPage />} />
-      <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
-      <Route path="/parts" element={<PartsPage />} />
-      <Route path="/services" element={<ServicesPage />} />
-      <Route path="/statutory-costs" element={<StatutoryCostsPage />} />
-      <Route path="/import" element={<ImportPage />} />
-      {/* Redirect any other path to dashboard */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  </Layout>
-);
+import './print.css';
+
+// A wrapper for authenticated routes
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
 
 function App() {
   const { isAuthenticated } = useContext(AuthContext);
 
   return (
-    <React.Fragment>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route 
-            path="/*" 
-            element={isAuthenticated ? <PrivateRoutes /> : <Navigate to="/login" />}
-          />
-        </Routes>
-      </Router>
-    </React.Fragment>
+    <Router>
+      <Box sx={{ display: 'flex' }}>
+        {isAuthenticated && <Layout />}
+        <Box component="main" sx={{ flexGrow: 1, width: '100%' }}>
+          {isAuthenticated && <Toolbar />}
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+            <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+
+            {/* Protected routes */}
+            <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute><CustomerList /></ProtectedRoute>} />
+            <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetailPage /></ProtectedRoute>} />
+            <Route path="/households" element={<ProtectedRoute><HouseholdsPage /></ProtectedRoute>} />
+            <Route path="/vehicles" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
+            <Route path="/estimates" element={<ProtectedRoute><EstimatePage /></ProtectedRoute>} />
+            <Route path="/estimates/new" element={<ProtectedRoute><AddEstimate /></ProtectedRoute>} />
+            <Route path="/estimates/:id" element={<ProtectedRoute><EstimateDetailPage /></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+            <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
+            <Route path="/parts" element={<ProtectedRoute><PartsPage /></ProtectedRoute>} />
+            <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
+            <Route path="/statutory-costs" element={<ProtectedRoute><StatutoryCostsPage /></ProtectedRoute>} />
+            <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
+
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Box>
+      </Box>
+    </Router>
   );
 }
 
 export default App;
-

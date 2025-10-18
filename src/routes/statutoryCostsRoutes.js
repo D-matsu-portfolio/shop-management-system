@@ -6,7 +6,7 @@ const {
   updateStatutoryCost,
   deleteStatutoryCost,
 } = require('../controllers/statutoryCostsController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 // Apply protect middleware to all routes in this file
 router.use(protect);
