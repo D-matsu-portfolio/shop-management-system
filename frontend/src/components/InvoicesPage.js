@@ -15,15 +15,10 @@ function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [filteredRows, setFilteredRows] = useState([]);
-  const [refetch, setRefetch] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { isGuest } = useContext(AuthContext);
-
-  const handleRefetch = useCallback(() => {
-    setRefetch(prev => !prev);
-  }, []);
 
   // Note: Delete Invoice API is not yet implemented, this is a placeholder
   const handleDelete = (id) => {
