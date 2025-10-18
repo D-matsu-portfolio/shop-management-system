@@ -22,6 +22,7 @@ app.use('/api/services', require('./routes/servicesRoutes'));
 app.use('/api/households', require('./routes/householdsRoutes'));
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/payments', require('./routes/paymentsRoutes'));
 
 const PORT = process.env.PORT || 3001;
 app.use('/api/auth', require('./routes/authRoutes'));

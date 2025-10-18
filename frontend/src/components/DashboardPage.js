@@ -7,8 +7,8 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import DescriptionIcon from '@mui/icons-material/Description';
 
-const StatCard = ({ title, value, icon }) => (
-  <Card sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+const StatCard = ({ title, value, icon, linkTo }) => (
+  <Card component={Link} to={linkTo} sx={{ display: 'flex', alignItems: 'center', p: 2, textDecoration: 'none', color: 'inherit', '&:hover': { boxShadow: 3 } }}>
     {icon}
     <Box sx={{ ml: 2 }}>
       <Typography variant="h6">{value}</Typography>
@@ -50,10 +50,10 @@ const DashboardPage = () => {
       
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}><StatCard title="総顧客数" value={stats.customerCount} icon={<PeopleIcon sx={{ fontSize: 40, color: 'primary.main' }} />} /></Grid>
-        <Grid item xs={12} sm={6} md={3}><StatCard title="総車両数" value={stats.vehicleCount} icon={<DirectionsCarIcon sx={{ fontSize: 40, color: 'secondary.main' }} />} /></Grid>
-        <Grid item xs={12} sm={6} md={3}><StatCard title="下書きの見積もり" value={stats.draftEstimatesCount} icon={<ReceiptIcon sx={{ fontSize: 40, color: 'warning.main' }} />} /></Grid>
-        <Grid item xs={12} sm={6} md={3}><StatCard title="未払いの請求書" value={stats.unpaidInvoicesCount} icon={<DescriptionIcon sx={{ fontSize: 40, color: 'error.main' }} />} /></Grid>
+        <Grid item xs={12} sm={6} md={3}><StatCard title="総顧客数" value={stats.customerCount} icon={<PeopleIcon sx={{ fontSize: 40, color: 'primary.main' }} />} linkTo="/customers" /></Grid>
+        <Grid item xs={12} sm={6} md={3}><StatCard title="総車両数" value={stats.vehicleCount} icon={<DirectionsCarIcon sx={{ fontSize: 40, color: 'secondary.main' }} />} linkTo="/vehicles" /></Grid>
+        <Grid item xs={12} sm={6} md={3}><StatCard title="下書きの見積もり" value={stats.draftEstimatesCount} icon={<ReceiptIcon sx={{ fontSize: 40, color: 'warning.main' }} />} linkTo="/estimates?status=draft" /></Grid>
+        <Grid item xs={12} sm={6} md={3}><StatCard title="未払いの請求書" value={stats.unpaidInvoicesCount} icon={<DescriptionIcon sx={{ fontSize: 40, color: 'error.main' }} />} linkTo="/invoices?status=unpaid" /></Grid>
       </Grid>
 
       {/* Quick Actions */}

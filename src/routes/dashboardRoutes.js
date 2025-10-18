@@ -9,7 +9,7 @@ const getDashboardStats = async (req, res) => {
     const customerCount = await db.query('SELECT COUNT(*) FROM customers');
     const vehicleCount = await db.query('SELECT COUNT(*) FROM vehicles');
     const draftEstimates = await db.query("SELECT COUNT(*) FROM estimates WHERE status = 'draft'");
-    const unpaidInvoices = await db.query("SELECT COUNT(*) FROM invoices WHERE status = 'unpaid'");
+    const unpaidInvoices = await db.query("SELECT COUNT(*) FROM invoices WHERE status != 'paid'");
 
     const recentEstimates = await db.query(`
       SELECT e.id, e.estimate_date, e.grand_total, c.name as customer_name

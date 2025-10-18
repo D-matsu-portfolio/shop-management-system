@@ -22,6 +22,7 @@ function EstimateDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [editableEstimate, setEditableEstimate] = useState(null);
+  const [error, setError] = useState(null);
   const [allCustomers, setAllCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [parts, setParts] = useState([]);
@@ -60,45 +61,63 @@ function EstimateDetailPage() {
   };
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
+    const fetchMasterData = async () => {
       try {
-        const promises = [apiFetch('/api/customers'), apiFetch('/api/parts'), apiFetch('/api/services')];
-        if (id) {
-          promises.push(apiFetch(`/api/estimates/${id}`));
-        }
-        const [customerData, partsData, servicesData, estimateData] = await Promise.all(promises);
-
+        const [customerData, partsData, servicesData] = await Promise.all([
+          apiFetch('/api/customers'),
+          apiFetch('/api/parts'),
+          apiFetch('/api/services'),
+        ]);
         setAllCustomers(customerData);
         setParts(partsData);
         setServices(servicesData);
-
-        if (estimateData) {
-          const currentServiceItems = estimateData.line_items.filter(item => ![...nonTaxableKeywords, ...taxableShakenKeywords].some(keyword => item.description.includes(keyword)));
-          const rowsToAdd = 12 - currentServiceItems.length;
-          if (rowsToAdd > 0) {
-            for (let i = 0; i < rowsToAdd; i++) {
-              estimateData.line_items.push({ id: `new-${Date.now()}-${i}`, description: '', quantity: 1, unit_price: 0, item_type: 'service' });
-            }
-          }
-          setEditableEstimate(estimateData);
-        } else {
-          initializeNewEstimate(location.state);
-        }
+        return { customerData, partsData, servicesData };
       } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching master data:', error);
+        setError('マスタデータの読み込みに失敗しました。');
+        return null;
       }
     };
-    fetchAllData();
+
+    const fetchEstimate = async (estimateId) => {
+      try {
+        const estimateData = await apiFetch(`/api/estimates/${estimateId}`);
+        const rowsToAdd = 12 - (estimateData.line_items?.length || 0);
+        if (rowsToAdd > 0) {
+          for (let i = 0; i < rowsToAdd; i++) {
+            estimateData.line_items.push({ id: `new-${Date.now()}-${i}`, description: '', quantity: 1, unit_price: 0, item_type: 'service' });
+          }
+        }
+        setEditableEstimate(estimateData);
+      } catch (error) {
+        console.error(`Error fetching estimate ${estimateId}:`, error);
+        setError('見積もりデータの読み込みに失敗しました。');
+      }
+    };
+
+    const runFetch = async () => {
+      setLoading(true);
+      setError(null);
+      await fetchMasterData();
+
+      if (id && id !== 'new') {
+        await fetchEstimate(id);
+      } else {
+        // This is a new estimate
+        initializeNewEstimate(location.state);
+      }
+      setLoading(false);
+    };
+
+    runFetch();
   }, [id, location.state]);
 
+  const customerId = editableEstimate?.customer_id;
   useEffect(() => {
-    if (editableEstimate && editableEstimate.customer_id) {
+    if (customerId) {
       const fetchVehicles = async () => {
         try {
-          const data = await apiFetch(`/api/vehicles/by-customer/${editableEstimate.customer_id}`);
+          const data = await apiFetch(`/api/vehicles/by-customer/${customerId}`);
           setVehicles(data);
         } catch (error) { console.error('Error fetching vehicles:', error); }
       };
@@ -106,7 +125,7 @@ function EstimateDetailPage() {
     } else {
       setVehicles([]);
     }
-  }, [editableEstimate?.customer_id]);
+  }, [customerId]);
 
   const handleFetchAndSetShakenFees = async () => {
     if (editableEstimate.estimate_type === '車検' && editableEstimate.vehicle_id && editableEstimate.weight && editableEstimate.vehicle_type) {
