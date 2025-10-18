@@ -24,6 +24,9 @@ const getInvoices = async (req, res) => {
 // @route   POST /api/invoices/from-estimate/:estimateId
 // @access  Public
 const createInvoiceFromEstimate = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   console.log('--- RUNNING LATEST INVOICE CREATION CODE ---');
   const { estimateId } = req.params;
   const { invoice_date, due_date } = req.body;

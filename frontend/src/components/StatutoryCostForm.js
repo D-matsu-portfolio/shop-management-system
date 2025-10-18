@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
-  Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button
+  Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Alert
 } from '@mui/material';
+import { AuthContext } from '../context/AuthContext';
 
 const StatutoryCostForm = ({ open, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({});
+  const { isGuest } = useContext(AuthContext);
 
   useEffect(() => {
     if (open) {
@@ -38,6 +40,7 @@ const StatutoryCostForm = ({ open, onClose, onSubmit, initialData }) => {
       <DialogTitle>{initialData ? '法定費用の編集' : '法定費用の新規追加'}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
           <TextField
             autoFocus
             margin="dense"
@@ -94,7 +97,7 @@ const StatutoryCostForm = ({ open, onClose, onSubmit, initialData }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>キャンセル</Button>
-          <Button type="submit">保存</Button>
+          <Button type="submit" disabled={isGuest}>保存</Button>
         </DialogActions>
       </form>
     </Dialog>

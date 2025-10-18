@@ -49,6 +49,9 @@ const getCustomerById = async (req, res) => {
 // @route   POST /api/customers
 // @access  Public
 const createCustomer = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { name, phone_number, email, address, household_id } = req.body;
   try {
     const { rows } = await db.query(
@@ -66,6 +69,9 @@ const createCustomer = async (req, res) => {
 // @route   PUT /api/customers/:id
 // @access  Public
 const updateCustomer = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { name, phone_number, email, address, household_id } = req.body;
   try {
     const { rows } = await db.query(
@@ -86,6 +92,9 @@ const updateCustomer = async (req, res) => {
 // @route   DELETE /api/customers/:id
 // @access  Public
 const deleteCustomer = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     const { rows } = await db.query('DELETE FROM customers WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {

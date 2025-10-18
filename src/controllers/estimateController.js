@@ -35,6 +35,9 @@ const getEstimates = async (req, res) => {
 // @route   POST /api/estimates
 // @access  Public
 const createEstimate = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { customer_id, vehicle_id, estimate_date, status, notes, line_items } = req.body;
   const client = await db.pool.connect(); // Get a client from the pool
 
@@ -91,6 +94,9 @@ const createEstimate = async (req, res) => {
 // @route   PUT /api/estimates/:id
 // @access  Private
 const updateEstimate = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { id } = req.params;
   const { customer_id, vehicle_id, estimate_date, status, notes, line_items } = req.body;
   const client = await db.pool.connect();
@@ -258,6 +264,9 @@ const getEstimateById = async (req, res) => {
 // @route   DELETE /api/estimates/:id
 // @access  Public
 const deleteEstimate = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     // Deleting an estimate will also delete its line items due to ON DELETE CASCADE
     const { rows } = await db.query('DELETE FROM estimates WHERE id = $1 RETURNING *', [req.params.id]);
@@ -275,6 +284,9 @@ const deleteEstimate = async (req, res) => {
 // @route   POST /api/statutory-costs/import
 // @access  Private
 const importStatutoryCosts = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   upload.single('file')(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ msg: `File upload error: ${err.message}` });

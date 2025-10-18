@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Paper, Box, Typography, IconButton, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\\]/g, '\\$&'); // $& means the whole matched string
@@ -18,6 +19,7 @@ function InvoicesPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { isGuest } = useContext(AuthContext);
 
   const handleRefetch = useCallback(() => {
     setRefetch(prev => !prev);
@@ -68,7 +70,7 @@ function InvoicesPage() {
       renderCell: (params) => (
         <Box>
           {/* <IconButton onClick={(e) => { e.stopPropagation(); handleEditOpen(params.row); }}><EditIcon /></IconButton> */}
-          <IconButton onClick={(e) => { e.stopPropagation(); handleDelete(params.id); }} aria-label="delete">
+          <IconButton onClick={(e) => { e.stopPropagation(); handleDelete(params.id); }} aria-label="delete" disabled={isGuest}>
             <DeleteIcon />
           </IconButton>
         </Box>

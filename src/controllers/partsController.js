@@ -26,6 +26,9 @@ const getParts = async (req, res) => {
 // @route   POST /api/parts
 // @access  Public
 const createPart = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { part_number, name, description, cost_price, sale_price } = req.body;
   try {
     const { rows } = await db.query(
@@ -43,6 +46,9 @@ const createPart = async (req, res) => {
 // @route   PUT /api/parts/:id
 // @access  Public
 const updatePart = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { part_number, name, description, cost_price, sale_price } = req.body;
   try {
     const { rows } = await db.query(
@@ -63,6 +69,9 @@ const updatePart = async (req, res) => {
 // @route   DELETE /api/parts/:id
 // @access  Public
 const deletePart = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     const { rows } = await db.query('DELETE FROM parts WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
@@ -79,6 +88,9 @@ const deletePart = async (req, res) => {
 // @route   POST /api/parts/import
 // @access  Private
 const importParts = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   // Use upload.single('file') as a middleware here
   upload.single('file')(req, res, async (err) => {
     if (err instanceof multer.MulterError) {

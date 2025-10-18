@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress, Select, MenuItem, FormControl, InputLabel, Alert, Grid
 } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(vehicle);
   const [formError, setFormError] = useState('');
+  const { isGuest } = useContext(AuthContext);
 
   useEffect(() => {
     // Ensure formData is not null and has defaults for all fields
@@ -99,6 +101,7 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
       <DialogTitle>車両情報の編集 (車検証レイアウト)</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
           {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
           {loading ? <CircularProgress /> : (
             <Box>
@@ -154,7 +157,7 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>キャンセル</Button>
-          <Button type="submit">保存</Button>
+          <Button type="submit" disabled={isGuest}>保存</Button>
         </DialogActions>
       </form>
     </Dialog>

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Alert } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function EditHousehold({ household, onHouseholdUpdated, open, onClose }) {
   const [formData, setFormData] = useState(household);
+  const { isGuest } = useContext(AuthContext);
 
   useEffect(() => {
     setFormData(household);
@@ -38,6 +40,7 @@ function EditHousehold({ household, onHouseholdUpdated, open, onClose }) {
       <DialogTitle>世帯名の編集</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
             <TextField 
               autoFocus 
               margin="dense" 
@@ -53,7 +56,7 @@ function EditHousehold({ household, onHouseholdUpdated, open, onClose }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>キャンセル</Button>
-          <Button type="submit">保存</Button>
+          <Button type="submit" disabled={isGuest}>保存</Button>
         </DialogActions>
       </form>
     </Dialog>

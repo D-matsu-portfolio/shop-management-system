@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import React, { useState, useContext } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Alert } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function AddService({ onServiceAdded }) {
   const [open, setOpen] = useState(false);
+  const { isGuest } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     service_code: '',
     name: '',
@@ -41,6 +43,7 @@ function AddService({ onServiceAdded }) {
         <DialogTitle>新規作業マスタ</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
             <TextField autoFocus margin="dense" name="service_code" label="作業コード" type="text" fullWidth variant="standard" value={formData.service_code} onChange={handleChange} />
             <TextField margin="dense" name="name" label="作業名" type="text" fullWidth variant="standard" value={formData.name} onChange={handleChange} required />
             <TextField margin="dense" name="description" label="説明" type="text" fullWidth multiline rows={2} variant="standard" value={formData.description} onChange={handleChange} />
@@ -48,7 +51,7 @@ function AddService({ onServiceAdded }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>キャンセル</Button>
-            <Button type="submit">保存</Button>
+            <Button type="submit" disabled={isGuest}>保存</Button>
           </DialogActions>
         </form>
       </Dialog>

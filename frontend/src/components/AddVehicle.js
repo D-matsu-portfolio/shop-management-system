@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress, Select, MenuItem, FormControl, InputLabel, Grid, Alert
 } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 // The button to open the dialog can be customized by passing a render prop
 function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
@@ -11,6 +12,7 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const { isGuest } = useContext(AuthContext);
   
   const [formData, setFormData] = useState({
     customer_id: null,
@@ -102,6 +104,7 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
         <DialogTitle>新規車両情報 (車検証レイアウト)</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
             {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
             {loading ? <CircularProgress /> : (
               <Box>
@@ -158,7 +161,7 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>キャンセル</Button>
-            <Button type="submit">保存</Button>
+            <Button type="submit" disabled={isGuest}>保存</Button>
           </DialogActions>
         </form>
       </Dialog>

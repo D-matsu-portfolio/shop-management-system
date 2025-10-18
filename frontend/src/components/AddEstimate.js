@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress, Typography, IconButton, Grid, Paper, Divider,
-  Select, MenuItem, FormControl, InputLabel
+  Select, MenuItem, FormControl, InputLabel, Alert
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 const estimateTypes = ['一般整備', '車検'];
 
@@ -14,6 +15,7 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
   // Dialog State
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { isGuest } = useContext(AuthContext);
 
   // Master Data State
   const [customers, setCustomers] = useState([]);
@@ -138,6 +140,7 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
         <DialogTitle>新規見積もり作成</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。見積もりの作成や変更はできません。</Alert>}
             {loading ? <CircularProgress /> : (
               <Grid container spacing={3}>
                 <Grid xs={12} md={4}>
@@ -154,18 +157,18 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
                 <Grid xs={12} md={8}>
                   <Typography variant="h6">明細</Typography>
                   <Box sx={{display: 'flex', gap: 2, mb: 2}}>
-                     <Autocomplete options={parts} getOptionLabel={(o) => `${o.name} (${o.part_number || ''}) - ${Number(o.sale_price).toLocaleString()}円` || ''} onChange={(e, val) => { if(val) handleAddLineItem(val, 'part'); }} renderInput={(params) => <TextField {...params} label="部品を検索して追加" />} sx={{flexGrow: 1}} />
-                     <Autocomplete options={services} getOptionLabel={(o) => `${o.name} - ${Number(o.default_total_cost).toLocaleString()}円` || ''} onChange={(e, val) => { if(val) handleAddLineItem(val, 'service'); }} renderInput={(params) => <TextField {...params} label="作業を検索して追加" />} sx={{flexGrow: 1}}/>
+                     <Autocomplete options={parts} getOptionLabel={(o) => `${o.name} (${o.part_number || ''}) - ${Number(o.sale_price).toLocaleString()}円` || ''} onChange={(e, val) => { if(val) handleAddLineItem(val, 'part'); }} renderInput={(params) => <TextField {...params} label="部品を検索して追加" />} sx={{flexGrow: 1}} disabled={isGuest} />
+                     <Autocomplete options={services} getOptionLabel={(o) => `${o.name} - ${Number(o.default_total_cost).toLocaleString()}円` || ''} onChange={(e, val) => { if(val) handleAddLineItem(val, 'service'); }} renderInput={(params) => <TextField {...params} label="作業を検索して追加" />} sx={{flexGrow: 1}} disabled={isGuest} />
                   </Box>
                   <Paper variant="outlined">
                     {lineItems.map((lineItem, index) => (
                       <React.Fragment key={index}>
                         <Grid container spacing={1} alignItems="center" sx={{ p: 1, bgcolor: lineItem.is_fixed ? '#f5f5f5' : 'transparent' }}>
-                          <Grid xs={5}><TextField name="description" label="作業内容・部品名" fullWidth value={lineItem.description} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed} /></Grid>
-                          <Grid xs={2}><TextField name="quantity" label="数量" type="number" fullWidth value={lineItem.quantity} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed} /></Grid>
-                          <Grid xs={3}><TextField name="unit_price" label="単価" type="number" fullWidth value={lineItem.unit_price} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed} /></Grid>
+                          <Grid xs={5}><TextField name="description" label="作業内容・部品名" fullWidth value={lineItem.description} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed || isGuest} /></Grid>
+                          <Grid xs={2}><TextField name="quantity" label="数量" type="number" fullWidth value={lineItem.quantity} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed || isGuest} /></Grid>
+                          <Grid xs={3}><TextField name="unit_price" label="単価" type="number" fullWidth value={lineItem.unit_price} onChange={e => handleLineItemChange(index, e)} size="small" required disabled={lineItem.is_fixed || isGuest} /></Grid>
                           <Grid xs={1}><Typography align="right">{ (Number(lineItem.quantity) * Number(lineItem.unit_price)).toLocaleString() }円</Typography></Grid>
-                          <Grid item xs={1}>{!lineItem.is_fixed && <IconButton onClick={() => handleRemoveLineItem(index)} size="small"><DeleteIcon /></IconButton>}</Grid>
+                          <Grid item xs={1}>{!lineItem.is_fixed && <IconButton onClick={() => handleRemoveLineItem(index)} size="small" disabled={isGuest}><DeleteIcon /></IconButton>}</Grid>
                         </Grid>
                         {index < lineItems.length - 1 && <Divider />} 
                       </React.Fragment>
@@ -183,7 +186,7 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>キャンセル</Button>
-            <Button type="submit" variant="contained">保存</Button>
+            <Button type="submit" variant="contained" disabled={isGuest}>保存</Button>
           </DialogActions>
         </form>
       </Dialog>

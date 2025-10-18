@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Button, TextField, Container, Typography, Box } from '@mui/material';
 import { apiFetch } from '../utils/api';
@@ -26,6 +26,25 @@ const LoginPage = () => {
         navigate('/'); // Redirect to home page after login
       } else {
         throw new Error('Login failed: No token received');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setError('');
+    try {
+      const { token } = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: 'guest@example.com', password: 'guest' }),
+      });
+
+      if (token) {
+        login(token);
+        navigate('/');
+      } else {
+        throw new Error('Guest login failed: No token received');
       }
     } catch (err) {
       setError(err.message);
@@ -79,13 +98,19 @@ const LoginPage = () => {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            sx={{ mt: 3, mb: 1 }}
           >
             Sign In
           </Button>
-          <Link to="/register" variant="body2">
-            アカウントをお持ちでないですか？ 新規登録
-          </Link>
+          <Button
+            type="button"
+            fullWidth
+            variant="outlined"
+            sx={{ mt: 1, mb: 2 }}
+            onClick={handleGuestLogin}
+          >
+            ゲストとしてサインイン
+          </Button>
         </Box>
       </Box>
     </Container>

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import React, { useState, useContext } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Alert } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function AddHousehold({ onHouseholdAdded }) {
   const [open, setOpen] = useState(false);
   const [householdName, setHouseholdName] = useState('');
+  const { isGuest } = useContext(AuthContext);
 
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -33,6 +35,7 @@ function AddHousehold({ onHouseholdAdded }) {
         <DialogTitle>新規世帯</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
             <TextField 
               autoFocus 
               margin="dense" 
@@ -48,7 +51,7 @@ function AddHousehold({ onHouseholdAdded }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>キャンセル</Button>
-            <Button type="submit">保存</Button>
+            <Button type="submit" disabled={isGuest}>保存</Button>
           </DialogActions>
         </form>
       </Dialog>
