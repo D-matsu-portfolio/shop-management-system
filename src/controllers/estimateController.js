@@ -87,11 +87,73 @@ const createEstimate = async (req, res) => {
   }
 };
 
+// @desc    Update an existing estimate with line items
+// @route   PUT /api/estimates/:id
+// @access  Private
+const updateEstimate = async (req, res) => {
+  const { id } = req.params;
+  const { customer_id, vehicle_id, estimate_date, status, notes, line_items } = req.body;
+  const client = await db.pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // 1. Delete old line items
+    await client.query('DELETE FROM estimate_line_items WHERE estimate_id = $1', [id]);
+
+    // 2. Insert new line items and calculate sub_total
+    let sub_total = 0;
+    for (const item of line_items) {
+      const itemTotalPrice = Number(item.quantity) * Number(item.unit_price);
+      sub_total += itemTotalPrice;
+      const lineItemQuery = `
+        INSERT INTO estimate_line_items (estimate_id, item_type, part_id, service_id, description, quantity, unit_price, total_price)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+      `;
+      await client.query(lineItemQuery, [
+        id, 
+        item.item_type, 
+        item.part_id || null, 
+        item.service_id || null, 
+        item.description, 
+        item.quantity, 
+        item.unit_price, 
+        itemTotalPrice
+      ]);
+    }
+
+    // 3. Recalculate tax and grand_total
+    const tax = sub_total * 0.10;
+    const grand_total = sub_total + tax;
+
+    // 4. Update the main estimate record
+    const updateEstimateQuery = `
+      UPDATE estimates 
+      SET customer_id = $1, vehicle_id = $2, estimate_date = $3, status = $4, notes = $5, sub_total = $6, tax = $7, grand_total = $8
+      WHERE id = $9 RETURNING *;
+    `;
+    const { rows } = await client.query(updateEstimateQuery, [
+      customer_id, vehicle_id, estimate_date, status, notes, sub_total, tax, grand_total, id
+    ]);
+
+    await client.query('COMMIT');
+
+    res.status(200).json(rows[0]);
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('updateEstimate Error:', err);
+    res.status(500).send('Server Error');
+  } finally {
+    client.release();
+  }
+};
+
 // @desc    Get statutory fees for a given vehicle weight
 // @route   GET /api/shaken-fees?vehicleWeight=1200
 // @access  Public
 const getShakenFees = async (req, res) => {
-  const { vehicleWeight } = req.query;
+  const { vehicleWeight, vehicleType } = req.query; // vehicleType is kept for future use but not used in this logic
   const weight = parseInt(vehicleWeight, 10);
 
   if (isNaN(weight)) {
@@ -99,11 +161,25 @@ const getShakenFees = async (req, res) => {
   }
 
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM statutory_costs WHERE (weight_min <= $1 AND weight_max > $1) OR item_name LIKE \'%自賠責%\' OR item_name LIKE \'%印紙代%\'',
+    // 1. Fetch the specific standard weight tax for the vehicle's weight
+    const { rows: weightTax } = await db.query(
+      `SELECT * FROM statutory_costs WHERE item_name = '自動車重量税（13年未満）' AND weight_min <= $1 AND weight_max > $1`,
       [weight]
     );
-    res.json(rows);
+
+    // 2. Fetch the specific 24-month Jibaiseki fee
+    const { rows: jibaisekiFee } = await db.query(
+      `SELECT * FROM statutory_costs WHERE item_name = '自賠責保険（24ヶ月）'`
+    );
+
+    // 3. Fetch the specific stamp duty
+    const { rows: stampDuty } = await db.query(
+      `SELECT * FROM statutory_costs WHERE item_name = '印紙代（指定整備）'`
+    );
+
+    const allFees = [...weightTax, ...jibaisekiFee, ...stampDuty];
+    res.json(allFees);
+
   } catch (err) {
     console.error('getShakenFees Error:', err);
     res.status(500).send('Server Error');
@@ -121,7 +197,7 @@ const getEstimatesByCustomerId = async (req, res) => {
         v.make, v.model, v.license_plate
       FROM estimates e
       LEFT JOIN vehicles v ON e.vehicle_id = v.id
-      WHERE e.customer_id =  
+      WHERE e.customer_id = $1 
       ORDER BY e.estimate_date DESC
     `, [req.params.customerId]);
     res.json(rows);
@@ -136,7 +212,7 @@ const getEstimatesByCustomerId = async (req, res) => {
 // @access  Public
 const getEstimatesByVehicleId = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM estimates WHERE vehicle_id =  ORDER BY estimate_date DESC', [req.params.vehicleId]);
+    const { rows } = await db.query('SELECT * FROM estimates WHERE vehicle_id = $1 ORDER BY estimate_date DESC', [req.params.vehicleId]);
     res.json(rows);
   } catch (err) {
     console.error('getEstimatesByVehicleId Error:', err);
@@ -155,7 +231,7 @@ const getEstimateById = async (req, res) => {
       FROM estimates e
       LEFT JOIN customers c ON e.customer_id = c.id
       LEFT JOIN vehicles v ON e.vehicle_id = v.id
-      WHERE e.id = 
+      WHERE e.id = $1
     `;
     const estimateResult = await db.query(estimateQuery, [req.params.id]);
 
@@ -165,7 +241,7 @@ const getEstimateById = async (req, res) => {
 
     const estimate = estimateResult.rows[0];
 
-    const lineItemsQuery = `SELECT * FROM estimate_line_items WHERE estimate_id =  ORDER BY id`;
+    const lineItemsQuery = `SELECT * FROM estimate_line_items WHERE estimate_id = $1 ORDER BY id`;
     const lineItemsResult = await db.query(lineItemsQuery, [req.params.id]);
 
     estimate.line_items = lineItemsResult.rows;
@@ -184,7 +260,7 @@ const getEstimateById = async (req, res) => {
 const deleteEstimate = async (req, res) => {
   try {
     // Deleting an estimate will also delete its line items due to ON DELETE CASCADE
-    const { rows } = await db.query('DELETE FROM estimates WHERE id =  RETURNING *', [req.params.id]);
+    const { rows } = await db.query('DELETE FROM estimates WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Estimate not found' });
     }
@@ -277,6 +353,7 @@ const importStatutoryCosts = async (req, res) => {
 module.exports = {
   getEstimates,
   createEstimate,
+  updateEstimate, // Add this
   getShakenFees,
   getEstimatesByCustomerId,
   getEstimatesByVehicleId,

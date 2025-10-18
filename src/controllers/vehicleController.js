@@ -33,15 +33,18 @@ const getVehicleById = async (req, res) => {
 // @route   POST /api/vehicles
 // @access  Public
 const createVehicle = async (req, res) => {
-  const { customer_id, make, model, year, vin, license_plate, weight } = req.body;
+  const { customer_id, make, model, year, vin, license_plate, weight, vehicle_type } = req.body;
   try {
     const { rows } = await db.query(
-      'INSERT INTO vehicles (customer_id, make, model, year, vin, license_plate, weight) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [customer_id, make, model, year, vin, license_plate, weight]
+      'INSERT INTO vehicles (customer_id, make, model, year, vin, license_plate, weight, vehicle_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [customer_id, make, model, year, vin, license_plate, weight, vehicle_type]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('createVehicle Error:', err);
+    if (err.code === '23505' && err.constraint === 'vehicles_vin_key') {
+      return res.status(409).json({ msg: 'この車台番号(VIN)は既に使用されています。' });
+    }
     res.status(500).send('Server Error');
   }
 };
@@ -50,11 +53,11 @@ const createVehicle = async (req, res) => {
 // @route   PUT /api/vehicles/:id
 // @access  Public
 const updateVehicle = async (req, res) => {
-  const { customer_id, make, model, year, vin, license_plate, weight } = req.body;
+  const { customer_id, make, model, year, vin, license_plate, weight, vehicle_type } = req.body;
   try {
     const { rows } = await db.query(
-      'UPDATE vehicles SET customer_id = $1, make = $2, model = $3, year = $4, vin = $5, license_plate = $6, weight = $7 WHERE id = $8 RETURNING *',
-      [customer_id, make, model, year, vin, license_plate, weight, req.params.id]
+      'UPDATE vehicles SET customer_id = $1, make = $2, model = $3, year = $4, vin = $5, license_plate = $6, weight = $7, vehicle_type = $8 WHERE id = $9 RETURNING *',
+      [customer_id, make, model, year, vin, license_plate, weight, vehicle_type, req.params.id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ msg: 'Vehicle not found' });
@@ -62,6 +65,9 @@ const updateVehicle = async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error('updateVehicle Error:', err);
+    if (err.code === '23505' && err.constraint === 'vehicles_vin_key') {
+      return res.status(409).json({ msg: 'この車台番号(VIN)は既に使用されています。' });
+    }
     res.status(500).send('Server Error');
   }
 };

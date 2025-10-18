@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Paper, Box, Typography, Grid, Card, CardContent, CircularProgress, Button } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import AddVehicle from './AddVehicle';
-import AddEstimate from './AddEstimate';
 import { apiFetch } from '../utils/api';
 
 const vehicleColumns = [
@@ -107,16 +106,16 @@ function CustomerDetailPage() {
                 <Button variant="contained" onClick={handleClickOpen}>車両を追加</Button>
               )}
             />
-            <AddEstimate 
-              onEstimateAdded={handleEstimateAdded}
-              initialCustomer={customer}
-              initialVehicle={selectedVehicle}
-              renderOpenButton={(handleClickOpen) => (
-                <Button variant="contained" color="secondary" disabled={!selectedVehicle} onClick={handleClickOpen}>
-                  選択中の車両で見積もりを作成
-                </Button>
-              )}
-            />
+            <Button 
+              component={Link} 
+              to="/estimates/new"
+              state={{ initialCustomer: customer, initialVehicle: selectedVehicle }}
+              variant="contained" 
+              color="secondary" 
+              disabled={!selectedVehicle}
+            >
+              選択中の車両で見積もりを作成
+            </Button>
         </Box>
       </Box>
 

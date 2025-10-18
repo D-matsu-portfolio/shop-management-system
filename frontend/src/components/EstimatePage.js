@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Box, Typography, IconButton, TextField } from '@mui/material';
+import { Paper, Box, Typography, IconButton, TextField, Button } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddEstimate from './AddEstimate';
+import { Link } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 
 function escapeRegExp(string) {
@@ -95,7 +95,7 @@ function EstimatePage() {
         見積もり管理
       </Typography>
       <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 2}}>
-        <AddEstimate onEstimateAdded={handleRefetch} />
+        <Button component={Link} to="/estimates/new" variant="contained">新規見積もりを作成</Button>
         <TextField
           variant="outlined"
           value={searchText}

@@ -1,0 +1,154 @@
+/* EstimateDetailPage.css - Unified styles for both screen and print */
+
+/* Main Layout Container */
+.new-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+
+.main-content {
+  flex: 1 1 75%;
+}
+
+.sidebar-content {
+  flex: 0 0 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Header Styles */
+.print-title {
+  font-size: 18pt !important;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.print-customer-info {
+  font-size: 11pt;
+}
+
+.print-meta-info {
+  text-align: right;
+  font-size: 9pt;
+}
+
+.print-company-info {
+  margin-top: 10px;
+  font-size: 8pt;
+}
+
+.print-summary-box {
+  border: 1px solid #333;
+  padding: 8px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.print-summary-box .MuiTypography-h5 {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Reusable Summary Box Style */
+.summary-box {
+  border: 1px solid #333;
+  background-color: #fff;
+  page-break-inside: avoid;
+}
+
+.summary-box-header {
+  background-color: #4682B4; /* SteelBlue */
+  color: white;
+  font-weight: bold;
+  padding: 5px 8px;
+  border-bottom: 1px solid #333;
+}
+
+.summary-box-content {
+  padding: 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 8.5pt;
+  border-bottom: 1px dotted #ccc;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-box-footer {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  padding: 5px 8px;
+  text-align: right;
+  border-top: 1px solid #ccc;
+}
+
+.summary-box-footer.grand-total {
+  background-color: #333;
+  color: white;
+  font-size: 1.1em;
+}
+
+/* Main Table Styles */
+.print-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.print-table-container th, .print-table-container td {
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  font-size: 9pt;
+  text-align: left;
+}
+
+.print-table-container th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.print-table-container th.desc-col { width: 60%; }
+.print-table-container th.qty-col { width: 10%; }
+.print-table-container th.price-col { width: 15%; }
+
+/* Editable input styles */
+.print-table-container input.desc-input {
+  width: 100%;
+}
+.print-table-container input.qty-input {
+  width: 60px;
+}
+.print-table-container input.price-input {
+  width: 100px;
+}
+
+.print-table-container input[type="text"], .print-table-container input[type="number"] {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.print-table-container input[type="text"]:focus, .print-table-container input[type="number"]:focus {
+  outline: none;
+  border-color: #4682B4;
+}

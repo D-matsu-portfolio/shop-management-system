@@ -11,6 +11,7 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'; // Import for CSV Import
+import GavelIcon from '@mui/icons-material/Gavel'; // Import for Statutory Costs
 
 import HouseIcon from '@mui/icons-material/House';
 
@@ -24,6 +25,7 @@ const menuItems = [
   { text: '請求書管理', icon: <DescriptionIcon />, path: '/invoices' },
   { text: '部品マスタ管理', icon: <ExtensionIcon />, path: '/parts' },
   { text: '作業マスタ管理', icon: <MiscellaneousServicesIcon />, path: '/services' },
+  { text: '法定費用マスタ', icon: <GavelIcon />, path: '/statutory-costs' },
   { text: 'CSVインポート', icon: <CloudUploadIcon />, path: '/import' }, // New CSV Import link
 ];
 

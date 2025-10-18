@@ -24,6 +24,7 @@ const getInvoices = async (req, res) => {
 // @route   POST /api/invoices/from-estimate/:estimateId
 // @access  Public
 const createInvoiceFromEstimate = async (req, res) => {
+  console.log('--- RUNNING LATEST INVOICE CREATION CODE ---');
   const { estimateId } = req.params;
   const { invoice_date, due_date } = req.body;
   const client = await db.pool.connect(); // Get a client from the pool
@@ -38,12 +39,16 @@ const createInvoiceFromEstimate = async (req, res) => {
     const lineItemsRes = await client.query('SELECT * FROM estimate_line_items WHERE estimate_id = $1', [estimateId]);
     const lineItems = lineItemsRes.rows;
 
+    // Handle empty date strings by converting them to null for the database
+    const finalInvoiceDate = invoice_date || null;
+    const finalDueDate = due_date || null;
+
     const invoiceQuery = `
       INSERT INTO invoices (customer_id, estimate_id, invoice_date, due_date, sub_total, tax, grand_total, status, notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, 'unpaid', $8) RETURNING id;
     `;
     const invoiceResult = await client.query(invoiceQuery, [
-      estimate.customer_id, estimate.id, invoice_date, due_date, 
+      estimate.customer_id, estimate.id, finalInvoiceDate, finalDueDate, 
       estimate.sub_total, estimate.tax, estimate.grand_total, estimate.notes
     ]);
     const invoiceId = invoiceResult.rows[0].id;

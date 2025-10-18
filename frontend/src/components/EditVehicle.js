@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
-  Autocomplete, CircularProgress
+  Autocomplete, CircularProgress, Select, MenuItem, FormControl, InputLabel, Alert
 } from '@mui/material';
 import { apiFetch } from '../utils/api';
 
@@ -9,9 +9,11 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(vehicle);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     setFormData(vehicle);
+    setFormError(''); // Clear error when vehicle prop changes
   }, [vehicle]);
 
   useEffect(() => {
@@ -30,16 +32,24 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
     fetchCustomers();
   }, [open]);
 
+  const handleClose = () => {
+    setFormError('');
+    onClose();
+  }
+
   const handleChange = (e) => {
+    setFormError('');
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleCustomerChange = (event, newValue) => {
+    setFormError('');
     setFormData({ ...formData, customer_id: newValue ? newValue.id : null });
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
     try {
       const data = await apiFetch(`/api/vehicles/${vehicle.id}`, {
         method: 'PUT',
@@ -47,14 +57,18 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
       });
       if (data.id) {
         console.log('Vehicle updated:', data);
-        onClose();
         onVehicleUpdated();
+        handleClose();
       } else {
         throw new Error(data.message || 'Error updating vehicle');
       }
     } catch (error) {
       console.error('Error updating vehicle:', error);
-      alert('車両の更新に失敗しました。');
+      if (error.status === 409) {
+        setFormError(error.message);
+      } else {
+        setFormError('車両の更新に失敗しました。');
+      }
     }
   };
 
@@ -65,6 +79,7 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
       <DialogTitle>車両情報の編集</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
           {loading ? <CircularProgress /> : (
             <>
               <Autocomplete
@@ -77,6 +92,23 @@ function EditVehicle({ vehicle, onVehicleUpdated, open, onClose }) {
               />
               <TextField margin="dense" name="make" label="メーカー" type="text" fullWidth variant="standard" value={formData.make || ''} onChange={handleChange} />
               <TextField margin="dense" name="model" label="モデル" type="text" fullWidth variant="standard" value={formData.model || ''} onChange={handleChange} />
+              <FormControl margin="dense" fullWidth variant="standard">
+                <InputLabel id="vehicle-type-label">車種</InputLabel>
+                <Select
+                  labelId="vehicle-type-label"
+                  name="vehicle_type"
+                  value={formData.vehicle_type || ''}
+                  onChange={handleChange}
+                  label="車種"
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  <MenuItem value="普通">普通</MenuItem>
+                  <MenuItem value="軽自動車">軽自動車</MenuItem>
+                  <MenuItem value="小型">小型</MenuItem>
+                  <MenuItem value="大型特殊">大型特殊</MenuItem>
+                  <MenuItem value="その他">その他</MenuItem>
+                </Select>
+              </FormControl>
               <TextField margin="dense" name="year" label="年式" type="number" fullWidth variant="standard" value={formData.year || ''} onChange={handleChange} />
               <TextField margin="dense" name="weight" label="車両重量 (kg)" type="number" fullWidth variant="standard" value={formData.weight || ''} onChange={handleChange} />
               <TextField margin="dense" name="vin" label="車台番号(VIN)" type="text" fullWidth variant="standard" value={formData.vin || ''} onChange={handleChange} />

@@ -1,28 +1,33 @@
+/* print.css - This file now ONLY contains the absolute necessary overrides for printing. */
+
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
 @media print {
   /* Hide non-printable elements */
   .no-print {
     display: none !important;
   }
 
-  /* Ensure the printable area takes up the whole page */
-  body * {
-    visibility: hidden;
-  }
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* --- NEW --- Force background colors to print */
-  * {
+  /* Ensure background colors and images are printed */
+  body, html {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Remove borders from editable inputs to look like plain text */
+  .print-table-container input[type="text"], .print-table-container input[type="number"] {
+    border: none;
+    background-color: transparent;
+  }
+
+  /* Hide dropdown borders and icons for print */
+  .MuiOutlinedInput-notchedOutline, .MuiSelect-icon, .MuiAutocomplete-popupIndicator, .MuiAutocomplete-clearIndicator {
+    display: none !important;
+  }
+  .MuiInput-underline:before, .MuiInput-underline:after {
+    border-bottom: none !important;
   }
 }
