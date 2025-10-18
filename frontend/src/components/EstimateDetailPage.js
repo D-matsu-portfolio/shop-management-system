@@ -13,7 +13,7 @@ const formatCurrency = (value) => {
   return num.toLocaleString('ja-JP', { style: 'currency', currency: 'JPY' });
 };
 
-const estimateTypes = ['一般整備', '車検'];
+
 const nonTaxableKeywords = ['重量税', '自賠責', '印紙代'];
 const taxableShakenKeywords = ['車検基本料'];
 
