@@ -6,7 +6,7 @@ const {
   updateHousehold,
   deleteHousehold,
 } = require('../controllers/householdsController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getHouseholds).post(protect, createHousehold);
 router.route('/:id').put(protect, updateHousehold).delete(protect, deleteHousehold);
