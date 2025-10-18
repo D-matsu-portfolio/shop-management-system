@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
-  Autocomplete, CircularProgress, Select, MenuItem, FormControl, InputLabel
+  Autocomplete, CircularProgress, Select, MenuItem, FormControl, InputLabel, Grid, Alert
 } from '@mui/material';
 import { apiFetch } from '../utils/api';
 
@@ -98,46 +98,62 @@ function AddVehicle({ onVehicleAdded, initialCustomer, renderOpenButton }) {
       {renderOpenButton ? renderOpenButton(handleClickOpen) : (
         <Button variant="contained" onClick={handleClickOpen}>新規車両を追加</Button>
       )}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>新規車両情報</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="md">
+        <DialogTitle>新規車両情報 (車検証レイアウト)</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
             {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
             {loading ? <CircularProgress /> : (
-              <>
+              <Box>
                 <Autocomplete
                   autoFocus
                   options={customers}
                   getOptionLabel={(option) => option.name || ''}
                   value={selectedCustomer}
                   onChange={handleCustomerChange}
-                  renderInput={(params) => <TextField {...params} label="顧客" margin="dense" required />}
+                  renderInput={(params) => <TextField {...params} label="所有者 (顧客)" margin="normal" required variant="outlined" />}
                   disabled={!!initialCustomer}
                 />
-                <TextField margin="dense" name="make" label="メーカー" type="text" fullWidth variant="standard" value={formData.make} onChange={handleChange} />
-                <TextField margin="dense" name="model" label="モデル" type="text" fullWidth variant="standard" value={formData.model} onChange={handleChange} />
-                <FormControl margin="dense" fullWidth variant="standard">
-                  <InputLabel id="vehicle-type-label">車種</InputLabel>
-                  <Select
-                    labelId="vehicle-type-label"
-                    name="vehicle_type"
-                    value={formData.vehicle_type}
-                    onChange={handleChange}
-                    label="車種"
-                  >
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    <MenuItem value="普通">普通</MenuItem>
-                    <MenuItem value="軽自動車">軽自動車</MenuItem>
-                    <MenuItem value="小型">小型</MenuItem>
-                    <MenuItem value="大型特殊">大型特殊</MenuItem>
-                    <MenuItem value="その他">その他</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField margin="dense" name="year" label="年式" type="number" fullWidth variant="standard" value={formData.year} onChange={handleChange} />
-                <TextField margin="dense" name="weight" label="車両重量 (kg)" type="number" fullWidth variant="standard" value={formData.weight} onChange={handleChange} />
-                <TextField margin="dense" name="vin" label="車台番号(VIN)" type="text" fullWidth variant="standard" value={formData.vin} onChange={handleChange} />
-                <TextField margin="dense" name="license_plate" label="ナンバープレート" type="text" fullWidth variant="standard" value={formData.license_plate} onChange={handleChange} />
-              </>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField name="license_plate" label="自動車登録番号又は車両番号" fullWidth variant="outlined" value={formData.license_plate} onChange={handleChange} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField name="year" label="初度登録年月" type="number" fullWidth variant="outlined" value={formData.year} onChange={handleChange} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField name="make" label="車名" fullWidth variant="outlined" value={formData.make} onChange={handleChange} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField name="model" label="型式" fullWidth variant="outlined" value={formData.model} onChange={handleChange} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField name="vin" label="車台番号" fullWidth variant="outlined" value={formData.vin} onChange={handleChange} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel id="vehicle-type-label">自動車の種別</InputLabel>
+                      <Select
+                        labelId="vehicle-type-label"
+                        name="vehicle_type"
+                        value={formData.vehicle_type}
+                        onChange={handleChange}
+                        label="自動車の種別"
+                      >
+                        <MenuItem value=""><em>None</em></MenuItem>
+                        <MenuItem value="普通">普通</MenuItem>
+                        <MenuItem value="軽自動車">軽自動車</MenuItem>
+                        <MenuItem value="小型">小型</MenuItem>
+                        <MenuItem value="大型特殊">大型特殊</MenuItem>
+                        <MenuItem value="その他">その他</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField name="weight" label="車両重量 (kg)" type="number" fullWidth variant="outlined" value={formData.weight} onChange={handleChange} />
+                  </Grid>
+                </Grid>
+              </Box>
             )}
           </DialogContent>
           <DialogActions>
