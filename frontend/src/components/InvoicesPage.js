@@ -84,7 +84,7 @@ function InvoicesPage() {
       }
     };
     fetchInvoices();
-  }, [refetch]);
+  }, []);
 
   const handleRowClick = (params, event) => {
     if (event.target.closest('[aria-label="delete"]')) return;
