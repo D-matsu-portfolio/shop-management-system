@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
   Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton, 
-  ListItemIcon, ListItemText, Collapse, useTheme, useMediaQuery, IconButton 
+  ListItemIcon, ListItemText, Collapse, useTheme, useMediaQuery, IconButton, Button
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
@@ -17,6 +17,8 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import HouseIcon from '@mui/icons-material/House';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import { AuthContext } from '../context/AuthContext';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const drawerWidth = 240;
 
@@ -92,6 +94,7 @@ export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -134,9 +137,14 @@ export default function Layout({ children }) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             自動車整備管理システム
           </Typography>
+          {isAuthenticated && (
+            <Button color="inherit" onClick={logout} startIcon={<LogoutIcon />}>
+              ログアウト
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
       <Box

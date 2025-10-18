@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, 
   Autocomplete, CircularProgress, Alert
 } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function AddCustomer({ onCustomerAdded }) {
   const [open, setOpen] = useState(false);
   const [households, setHouseholds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [suggestedHousehold, setSuggestedHousehold] = useState(null);
+  const { isGuest } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -93,6 +95,7 @@ function AddCustomer({ onCustomerAdded }) {
         <DialogTitle>新規顧客情報</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
             {loading ? <CircularProgress /> : (
               <>
                 <TextField autoFocus margin="dense" name="name" label="顧客名" type="text" fullWidth variant="standard" value={formData.name} onChange={handleChange} required />
@@ -119,7 +122,7 @@ function AddCustomer({ onCustomerAdded }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>キャンセル</Button>
-            <Button type="submit">保存</Button>
+            <Button type="submit" disabled={isGuest}>保存</Button>
           </DialogActions>
         </form>
       </Dialog>

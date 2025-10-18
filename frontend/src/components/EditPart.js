@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Alert } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function EditPart({ part, onPartUpdated, open, onClose }) {
   const [formData, setFormData] = useState(part);
+  const { isGuest } = useContext(AuthContext);
 
   useEffect(() => {
     setFormData(part);
@@ -38,6 +40,7 @@ function EditPart({ part, onPartUpdated, open, onClose }) {
       <DialogTitle>部品マスタの編集</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
           <TextField autoFocus margin="dense" name="part_number" label="品番" type="text" fullWidth variant="standard" value={formData.part_number || ''} onChange={handleChange} />
           <TextField margin="dense" name="name" label="部品名" type="text" fullWidth variant="standard" value={formData.name || ''} onChange={handleChange} required />
           <TextField margin="dense" name="description" label="説明" type="text" fullWidth multiline rows={2} variant="standard" value={formData.description || ''} onChange={handleChange} />
@@ -46,7 +49,7 @@ function EditPart({ part, onPartUpdated, open, onClose }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>キャンセル</Button>
-          <Button type="submit">保存</Button>
+          <Button type="submit" disabled={isGuest}>保存</Button>
         </DialogActions>
       </form>
     </Dialog>

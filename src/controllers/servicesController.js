@@ -26,6 +26,9 @@ const getServices = async (req, res) => {
 // @route   POST /api/services
 // @access  Public
 const createService = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { service_code, name, description, default_total_cost } = req.body;
   try {
     const { rows } = await db.query(
@@ -43,6 +46,9 @@ const createService = async (req, res) => {
 // @route   PUT /api/services/:id
 // @access  Public
 const updateService = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { service_code, name, description, default_total_cost } = req.body;
   try {
     const { rows } = await db.query(
@@ -63,6 +69,9 @@ const updateService = async (req, res) => {
 // @route   DELETE /api/services/:id
 // @access  Public
 const deleteService = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     const { rows } = await db.query('DELETE FROM services WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {
@@ -79,6 +88,9 @@ const deleteService = async (req, res) => {
 // @route   POST /api/services/import
 // @access  Private
 const importServices = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   // Use upload.single('file') as a middleware here
   upload.single('file')(req, res, async (err) => {
     if (err instanceof multer.MulterError) {

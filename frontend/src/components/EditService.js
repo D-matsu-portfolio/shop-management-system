@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Alert } from '@mui/material';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 function EditService({ service, onServiceUpdated, open, onClose }) {
   const [formData, setFormData] = useState(service);
+  const { isGuest } = useContext(AuthContext);
 
   useEffect(() => {
     setFormData(service);
@@ -38,6 +40,7 @@ function EditService({ service, onServiceUpdated, open, onClose }) {
       <DialogTitle>作業マスタの編集</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
           <TextField autoFocus margin="dense" name="service_code" label="作業コード" type="text" fullWidth variant="standard" value={formData.service_code || ''} onChange={handleChange} />
           <TextField margin="dense" name="name" label="作業名" type="text" fullWidth variant="standard" value={formData.name || ''} onChange={handleChange} required />
           <TextField margin="dense" name="description" label="説明" type="text" fullWidth multiline rows={2} variant="standard" value={formData.description || ''} onChange={handleChange} />
@@ -45,7 +48,7 @@ function EditService({ service, onServiceUpdated, open, onClose }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>キャンセル</Button>
-          <Button type="submit">保存</Button>
+          <Button type="submit" disabled={isGuest}>保存</Button>
         </DialogActions>
       </form>
     </Dialog>

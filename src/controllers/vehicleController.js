@@ -33,6 +33,9 @@ const getVehicleById = async (req, res) => {
 // @route   POST /api/vehicles
 // @access  Public
 const createVehicle = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { customer_id, make, model, year, vin, license_plate, weight, vehicle_type } = req.body;
   try {
     const { rows } = await db.query(
@@ -53,6 +56,9 @@ const createVehicle = async (req, res) => {
 // @route   PUT /api/vehicles/:id
 // @access  Public
 const updateVehicle = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { customer_id, make, model, year, vin, license_plate, weight, vehicle_type } = req.body;
   try {
     const { rows } = await db.query(
@@ -76,6 +82,9 @@ const updateVehicle = async (req, res) => {
 // @route   DELETE /api/vehicles/:id
 // @access  Public
 const deleteVehicle = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     const { rows } = await db.query('DELETE FROM vehicles WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {

@@ -17,6 +17,9 @@ const getHouseholds = async (req, res) => {
 // @route   POST /api/households
 // @access  Public
 const createHousehold = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { household_name } = req.body;
   try {
     const { rows } = await db.query(
@@ -34,6 +37,9 @@ const createHousehold = async (req, res) => {
 // @route   PUT /api/households/:id
 // @access  Public
 const updateHousehold = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   const { household_name } = req.body;
   try {
     const { rows } = await db.query(
@@ -54,6 +60,9 @@ const updateHousehold = async (req, res) => {
 // @route   DELETE /api/households/:id
 // @access  Public
 const deleteHousehold = async (req, res) => {
+  if (req.user && req.user.email === 'guest@example.com') {
+    return res.status(403).json({ message: 'ゲストユーザーは読み取り専用です。' });
+  }
   try {
     const { rows } = await db.query('DELETE FROM households WHERE id = $1 RETURNING *', [req.params.id]);
     if (rows.length === 0) {

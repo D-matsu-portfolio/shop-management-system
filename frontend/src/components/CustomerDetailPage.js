@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Paper, Box, Typography, Grid, Card, CardContent, CircularProgress, Button, useTheme, useMediaQuery } from '@mui/material';
+import { Paper, Box, Typography, Grid, Card, CardContent, CircularProgress, Button, useTheme, useMediaQuery, Alert } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { jaJP } from '@mui/x-data-grid/locales';
 import AddVehicle from './AddVehicle';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 const vehicleColumns = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -32,6 +33,7 @@ function CustomerDetailPage() {
   const [workHistory, setWorkHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const { isGuest } = useContext(AuthContext);
   
   const [refetchVehicles, setRefetchVehicles] = useState(false);
   const [refetchHistory, setRefetchHistory] = useState(false);
@@ -105,11 +107,12 @@ function CustomerDetailPage() {
         </Grid>
         <Grid item xs={12} md={4}>
           <Box sx={{display: 'flex', flexDirection: 'column', gap: 1, height: '100%', justifyContent: 'space-around'}}>
+              {isGuest && <Alert severity="info">ゲストは閲覧のみ可能です</Alert>}
               <AddVehicle 
                 onVehicleAdded={handleVehicleAdded} 
                 initialCustomer={customer} 
                 renderOpenButton={(handleClickOpen) => (
-                  <Button variant="contained" onClick={handleClickOpen}>車両を追加</Button>
+                  <Button variant="contained" onClick={handleClickOpen} disabled={isGuest}>車両を追加</Button>
                 )}
               />
               <Button 
@@ -118,7 +121,7 @@ function CustomerDetailPage() {
                 state={{ initialCustomer: customer, initialVehicle: selectedVehicle }}
                 variant="contained" 
                 color="secondary" 
-                disabled={!selectedVehicle}
+                disabled={!selectedVehicle || isGuest}
               >
                 選択中の車両で見積もりを作成
               </Button>

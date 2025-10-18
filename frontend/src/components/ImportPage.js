@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Box, Typography, Paper, Button, Alert, CircularProgress } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 import { apiFetch } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 const VisuallyHiddenInput = styled('input')({ clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', position: 'absolute', bottom: 0, left: 0, whiteSpace: 'nowrap', width: 1, });
 
@@ -10,6 +11,7 @@ const ImportSection = ({ title, endpoint, onImportSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const { isGuest } = useContext(AuthContext);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -54,9 +56,10 @@ const ImportSection = ({ title, endpoint, onImportSuccess }) => {
         </Button>
         {selectedFile && <Typography variant="body2">{selectedFile.name}</Typography>}
       </Box>
-      <Button variant="contained" color="primary" onClick={handleUpload} disabled={!selectedFile || loading}>
+      <Button variant="contained" color="primary" onClick={handleUpload} disabled={!selectedFile || loading || isGuest}>
         {loading ? <CircularProgress size={24} /> : 'インポート開始'}
       </Button>
+      {isGuest && <Alert severity="warning" sx={{ mt: 2 }}>ゲストユーザーはインポート機能を利用できません。</Alert>}
       {message.text && (
         <Alert severity={message.type} sx={{ mt: 2 }}>
           {message.text}

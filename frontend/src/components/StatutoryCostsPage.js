@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Paper, useTheme, useMediaQuery } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Box, Typography, Button, Paper, useTheme, useMediaQuery, Alert } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { apiFetch } from '../utils/api';
 import StatutoryCostForm from './StatutoryCostForm';
+import { AuthContext } from '../context/AuthContext';
 
 const StatutoryCostsPage = () => {
   const [costs, setCosts] = useState([]);
@@ -11,6 +12,7 @@ const StatutoryCostsPage = () => {
   const [editingCost, setEditingCost] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { isGuest } = useContext(AuthContext);
 
   const fetchCosts = async () => {
     setLoading(true);
@@ -92,8 +94,8 @@ const StatutoryCostsPage = () => {
       renderCell: (params) => {
         return (
           <Box>
-            <Button size="small" onClick={() => handleEdit(params.row)}>編集</Button>
-            <Button size="small" color="secondary" onClick={() => handleDelete(params.row.id)}>削除</Button>
+            <Button size="small" onClick={() => handleEdit(params.row)} disabled={isGuest}>編集</Button>
+            <Button size="small" color="secondary" onClick={() => handleDelete(params.row.id)} disabled={isGuest}>削除</Button>
           </Box>
         );
       },
@@ -104,8 +106,9 @@ const StatutoryCostsPage = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4">法定費用マスタ</Typography>
-        <Button variant="contained" onClick={handleAddNew}>新規追加</Button>
+        <Button variant="contained" onClick={handleAddNew} disabled={isGuest}>新規追加</Button>
       </Box>
+      {isGuest && <Alert severity="warning" sx={{ mb: 2 }}>ゲストユーザーは閲覧のみ可能です。</Alert>}
       <Paper>
         <DataGrid
           rows={costs}

@@ -5,7 +5,7 @@ const { registerUser, loginUser } = require('../controllers/authController');
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public
-router.post('/register', registerUser);
+// router.post('/register', register);
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
