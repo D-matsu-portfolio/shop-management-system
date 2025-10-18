@@ -11,6 +11,7 @@ import HouseholdsPage from './components/HouseholdsPage';
 import EstimateDetailPage from './components/EstimateDetailPage';
 import InvoicesPage from './components/InvoicesPage';
 import InvoiceDetailPage from './components/InvoiceDetailPage';
+import StatutoryCostsPage from './components/StatutoryCostsPage'; // Import the new page
 import LoginPage from './components/LoginPage'; // Import the login page
 import RegisterPage from './components/RegisterPage'; // Import the register page
 import ImportPage from './components/ImportPage'; // Import the ImportPage
@@ -28,11 +29,13 @@ const PrivateRoutes = () => (
       <Route path="/households" element={<HouseholdsPage />} />
       <Route path="/vehicles" element={<VehicleList />} />
       <Route path="/estimates" element={<EstimatePage />} />
+      <Route path="/estimates/new" element={<EstimateDetailPage />} />
       <Route path="/estimates/:id" element={<EstimateDetailPage />} />
       <Route path="/invoices" element={<InvoicesPage />} />
       <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
       <Route path="/parts" element={<PartsPage />} />
       <Route path="/services" element={<ServicesPage />} />
+      <Route path="/statutory-costs" element={<StatutoryCostsPage />} />
       <Route path="/import" element={<ImportPage />} />
       {/* Redirect any other path to dashboard */}
       <Route path="*" element={<Navigate to="/" />} />

@@ -7,6 +7,7 @@ const {
   getEstimatesByCustomerId,
   getEstimatesByVehicleId,
   getEstimateById,
+  updateEstimate, // Add this
   deleteEstimate,
   importStatutoryCosts,
 } = require('../controllers/estimateController');
@@ -17,6 +18,6 @@ router.route('/shaken-fees').get(protect, getShakenFees);
 router.post('/statutory-costs/import', protect, importStatutoryCosts);
 router.route('/by-customer/:customerId').get(protect, getEstimatesByCustomerId);
 router.route('/by-vehicle/:vehicleId').get(protect, getEstimatesByVehicleId);
-router.route('/:id').get(protect, getEstimateById).delete(protect, deleteEstimate);
+router.route('/:id').get(protect, getEstimateById).put(protect, updateEstimate).delete(protect, deleteEstimate);
 
 module.exports = router;

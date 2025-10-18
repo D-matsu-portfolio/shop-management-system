@@ -20,6 +20,7 @@ app.use('/api/services', require('./routes/servicesRoutes'));
 app.use('/api/households', require('./routes/householdsRoutes'));
 app.use('/api/invoices', require('./routes/invoicesRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/statutory-costs', require('./routes/statutoryCostsRoutes'));
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {

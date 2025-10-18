@@ -63,7 +63,7 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
   // Auto-populate fees when estimate type is "Shaken" and a vehicle is selected
   useEffect(() => {
     const fetchShakenFees = async () => {
-      if (estimateType === '車検' && selectedVehicle && selectedVehicle.weight) {
+      if (estimateType === '車検' && selectedVehicle && selectedVehicle.weight && selectedVehicle.vehicle_type) {
         const shakenBaseService = services.find(s => s.service_code === 'SHAKEN-BASE');
         const baseItems = shakenBaseService ? [{
           item_type: 'service',
@@ -75,7 +75,7 @@ function AddEstimate({ onEstimateAdded, initialCustomer, initialVehicle, renderO
         }] : [];
 
         try {
-          const fees = await apiFetch(`/api/shaken-fees?vehicleWeight=${selectedVehicle.weight}`);
+          const fees = await apiFetch(`/api/estimates/shaken-fees?vehicleWeight=${selectedVehicle.weight}&vehicleType=${selectedVehicle.vehicle_type}`);
           const feeItems = fees.map(fee => ({ item_type: 'fee', description: fee.item_name, quantity: 1, unit_price: fee.cost, is_fixed: true }));
           const otherItems = lineItems.filter(item => !item.is_fixed);
           setLineItems([...baseItems, ...feeItems, ...otherItems]);
