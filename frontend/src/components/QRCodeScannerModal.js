@@ -49,14 +49,27 @@ const QRCodeScannerModal = ({ open, onClose, onScanSuccess }) => {
         },
       };
 
-      // Start scanning.
-      scanner.start({ facingMode: 'environment' }, config, successCallback, errorCallback)
+      // Start scanning. More robust camera selection.
+      Html5Qrcode.getCameras()
+        .then(devices => {
+          if (devices && devices.length) {
+            // Find the rear camera, fallback to the first camera on the list
+            const rearCamera = devices.find(device => 
+              device.label.toLowerCase().includes('back') || 
+              device.label.toLowerCase().includes('environment')
+            );
+            const cameraId = rearCamera ? rearCamera.id : devices[0].id;
+            
+            scanner.start(cameraId, config, successCallback, errorCallback)
+              .catch(err => {
+                console.error(`Failed to start scanner with camera ID ${cameraId}.`, err);
+              });
+          } else {
+            console.error("No cameras found.");
+          }
+        })
         .catch(err => {
-          console.warn('Environment camera failed, trying user camera.', err);
-          scanner.start({ facingMode: 'user' }, config, successCallback, errorCallback)
-            .catch(err2 => {
-              console.error('Could not start scanner with any camera.', err2);
-            });
+          console.error("Failed to get camera list.", err);
         });
     }
 
