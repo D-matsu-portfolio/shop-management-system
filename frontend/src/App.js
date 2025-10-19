@@ -26,7 +26,17 @@ import './print.css';
 
 // A wrapper for authenticated routes
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, isLoading } = useContext(AuthContext);
+
+  if (isLoading) {
+    // 認証状態を確認中はローディング表示
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
