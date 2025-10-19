@@ -38,7 +38,16 @@ const QRCodeScannerModal = ({ open, onClose, onScanSuccess }) => {
         // Errors are frequent, so we don't log them to avoid console spam.
       };
 
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      const config = {
+        fps: 10,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
+          return {
+            width: size,
+            height: size,
+          };
+        },
+      };
 
       // Start scanning.
       scanner.start({ facingMode: 'environment' }, config, successCallback, errorCallback)
