@@ -1,86 +1,61 @@
 import React, { useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Dialog, DialogContent, DialogTitle, IconButton, Box, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 const qrReaderElementId = 'qr-reader-container';
 
 const QRCodeScannerModal = ({ open, onClose, onScanSuccess }) => {
-  // Use a ref to hold the scanner instance. This persists across re-renders.
   const scannerRef = useRef(null);
 
   useEffect(() => {
     if (open) {
-      // Ensure the container exists.
-      const container = document.getElementById(qrReaderElementId);
-      if (!container) return;
-
-      // Initialize scanner
-      const scanner = new Html5Qrcode(qrReaderElementId, /* verbose= */ false);
-      scannerRef.current = scanner;
-
-      const successCallback = (decodedText, decodedResult) => {
-        // Stop scanning on the first successful read.
-        if (scannerRef.current && scannerRef.current.isScanning) {
-          scannerRef.current.stop()
-            .then(() => {
-              console.log("QR Scanner stopped on success.");
-              onScanSuccess(decodedText); // Notify parent component only after stopping.
-            })
-            .catch(err => {
-              console.error("Failed to stop scanner after success.", err);
-              onScanSuccess(decodedText); // Still notify parent even if stopping fails.
-            });
-        }
-      };
-
-      const errorCallback = (errorMessage) => {
-        // Errors are frequent, so we don't log them to avoid console spam.
-      };
-
       const config = {
         fps: 10,
         qrbox: (viewfinderWidth, viewfinderHeight) => {
           const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
-          return {
-            width: size,
-            height: size,
-          };
+          return { width: size, height: size };
         },
+        // Explicitly request the rear camera. This is critical for mobile.
+        videoConstraints: {
+          facingMode: { exact: "environment" }
+        }
       };
 
-      // Start scanning. More robust camera selection.
-      Html5Qrcode.getCameras()
-        .then(devices => {
-          if (devices && devices.length) {
-            // Find the rear camera, fallback to the first camera on the list
-            const rearCamera = devices.find(device => 
-              device.label.toLowerCase().includes('back') || 
-              device.label.toLowerCase().includes('environment')
-            );
-            const cameraId = rearCamera ? rearCamera.id : devices[0].id;
-            
-            scanner.start(cameraId, config, successCallback, errorCallback)
-              .catch(err => {
-                console.error(`Failed to start scanner with camera ID ${cameraId}.`, err);
-              });
-          } else {
-            console.error("No cameras found.");
-          }
-        })
-        .catch(err => {
-          console.error("Failed to get camera list.", err);
-        });
+      const successCallback = (decodedText, decodedResult) => {
+        // The scanner stops automatically on success when using Html5QrcodeScanner.
+        // To prevent multiple scans, we ensure the modal is closed or handled.
+        if (scannerRef.current) {
+          onScanSuccess(decodedText);
+        }
+      };
+
+      const errorCallback = (errorMessage) => {
+        // Errors are frequent, ignore them to avoid console spam.
+      };
+
+      // If a scanner instance doesn't exist, create one.
+      if (!scannerRef.current) {
+        const scanner = new Html5QrcodeScanner(
+          qrReaderElementId,
+          config,
+          /* verbose= */ false
+        );
+        scanner.render(successCallback, errorCallback);
+        scannerRef.current = scanner;
+      }
     }
 
-    // Cleanup function: This is called when the component unmounts or `open` changes.
+    // Cleanup function
     return () => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop()
-          .then(() => console.log("QR Scanner cleaned up."))
-          .catch(err => console.warn("Cleanup stop failed.", err));
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(error => {
+          console.error("Failed to clear scanner.", error);
+        });
+        scannerRef.current = null;
       }
     };
+    // onClose is added to dependencies to handle modal closure properly
   }, [open, onScanSuccess, onClose]);
 
   return (
@@ -96,7 +71,8 @@ const QRCodeScannerModal = ({ open, onClose, onScanSuccess }) => {
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        {open && <Box id={qrReaderElementId} width="100%"></Box>}
+        {/* The container for the scanner UI */}
+        <Box id={qrReaderElementId} width="100%" sx={{ "& > div": { border: 'none !important' } }} />
         <Typography variant="body2" color="text.secondary" sx={{mt: 2}}>
           カメラが起動しない、または読み込みがうまくいかない場合は、ブラウザのカメラアクセス許可を確認してください。
         </Typography>
