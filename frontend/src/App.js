@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Toolbar } from '@mui/material';
+import { Box, Toolbar, CircularProgress } from '@mui/material';
 import { AuthContext } from './context/AuthContext';
 
 // Layout and Pages
