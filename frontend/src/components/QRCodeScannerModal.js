@@ -18,7 +18,7 @@ const QRCodeScannerModal = ({ open, onClose, onScanSuccess }) => {
         },
         // Explicitly request the rear camera. This is critical for mobile.
         videoConstraints: {
-          facingMode: { exact: "environment" }
+          facingMode: "environment"
         }
       };
 
