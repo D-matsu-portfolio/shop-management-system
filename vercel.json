@@ -17,6 +17,18 @@
       "dest": "/lp.html"
     },
     {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
       "handle": "filesystem"
     },
     {
