@@ -1,0 +1,41 @@
+body {
+    padding-top: 56px;
+    font-family: 'Helvetica Neue', 'Arial', 'Hiragino Sans', 'Meiryo', sans-serif;
+}
+#hero {
+    background: url('../images/hero-bg.jpg') no-repeat center center;
+    background-size: cover;
+    color: #fff;
+    padding: 8rem 0;
+    position: relative;
+}
+#hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+}
+#hero .container {
+    position: relative;
+    z-index: 2;
+}
+#hero h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+}
+section {
+    padding: 60px 0;
+}
+.card {
+    transition: transform 0.3s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-10px);
+}
+#cta {
+    background-color: #f8f9fa;
+}

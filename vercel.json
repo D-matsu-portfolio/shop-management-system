@@ -9,16 +9,35 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "build" }
+    },
+    {
+      "src": "landing/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/landing/index.html"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/landing/css/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/landing/images/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "dest": "api/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "dest": "/index.html"
     }
   ]
 }
