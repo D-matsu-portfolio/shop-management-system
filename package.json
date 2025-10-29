@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vercel dev",
     "start": "node api/index.js",
-    "build": "cd frontend && npm install && npm run build"
+    "build": "cd frontend && npm run build"
   },
   "keywords": ["react", "express", "vercel", "serverless", "shop-management"],
   "author": "",
