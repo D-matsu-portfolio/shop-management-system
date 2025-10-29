@@ -3,7 +3,7 @@ body {
     font-family: 'Helvetica Neue', 'Arial', 'Hiragino Sans', 'Meiryo', sans-serif;
 }
 #hero {
-    background: url('../images/hero-bg.jpg') no-repeat center center;
+    background: url('/images/hero-bg.jpg') no-repeat center center;
     background-size: cover;
     color: #fff;
     padding: 8rem 0;
