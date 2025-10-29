@@ -21,14 +21,6 @@
       "dest": "/landing/index.html"
     },
     {
-      "src": "/css/(.*)",
-      "dest": "/landing/css/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/landing/images/$1"
-    },
-    {
       "handle": "filesystem"
     },
     {
