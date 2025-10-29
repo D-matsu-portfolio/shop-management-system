@@ -14,7 +14,7 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/index.html"
+      "dest": "/lp.html"
     },
     {
       "handle": "filesystem"
@@ -25,7 +25,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/app.html"
+      "dest": "/index.html"
     }
   ]
 }
